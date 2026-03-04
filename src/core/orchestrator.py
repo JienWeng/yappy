@@ -7,7 +7,10 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from src.core.callbacks import NullCallbacks
+
 if TYPE_CHECKING:
+    from src.core.callbacks import OrchestratorCallbacks
     from src.core.config import AppConfig
     from src.core.rate_limiter import RateLimiter
     from src.scraper.linkedin_scraper import LinkedInScraper
@@ -38,6 +41,7 @@ class Orchestrator:
         comment_generator: "CommentGenerator",
         comment_poster: "CommentPoster",
         activity_log: "ActivityLog",
+        callbacks: "OrchestratorCallbacks | None" = None,
     ) -> None:
         self._config = config
         self._rate_limiter = rate_limiter
@@ -45,6 +49,7 @@ class Orchestrator:
         self._generator = comment_generator
         self._poster = comment_poster
         self._log = activity_log
+        self._callbacks: OrchestratorCallbacks = callbacks or NullCallbacks()
 
     async def run(self) -> PipelineResult:
         started_at = datetime.now(timezone.utc)
@@ -68,6 +73,17 @@ class Orchestrator:
             logger.info("Scraped %d posts from target %r", len(scrape_result.posts), target.value)
 
             for post in scrape_result.posts:
+                if self._callbacks.should_stop():
+                    break
+                while self._callbacks.should_pause():
+                    await asyncio.sleep(0.5)
+
+                self._callbacks.on_post_found(
+                    post_url=post.post_url,
+                    author_name=post.author_name,
+                    text_preview=post.post_text[:100],
+                )
+
                 try:
                     self._rate_limiter.assert_can_post()
                 except Exception as exc:
@@ -95,6 +111,12 @@ class Orchestrator:
                     if generate_result.error:
                         raise RuntimeError(f"Generation failed: {generate_result.error}")
 
+                    self._callbacks.on_comment_generated(
+                        post_url=post.post_url,
+                        author_name=post.author_name,
+                        comment_text=generate_result.comment.text,
+                    )
+
                     post_result = await self._poster.post_comment(
                         post, generate_result.comment
                     )
@@ -105,6 +127,10 @@ class Orchestrator:
                             status="success",
                         )
                         comments_succeeded += 1
+                        self._callbacks.on_comment_posted(
+                            post_url=post.post_url,
+                            comment_text=generate_result.comment.text,
+                        )
                         logger.info(
                             "Comment posted on %s (liked=%s)",
                             post.post_url, post_result.liked,
@@ -117,11 +143,24 @@ class Orchestrator:
                     logger.error(error_msg)
                     errors.append(error_msg)
                     comments_failed += 1
+                    self._callbacks.on_comment_failed(
+                        post_url=post.post_url, error=str(exc),
+                    )
                     self._log.record_comment(
                         post_url=post.post_url,
                         comment_text="",
                         status="failed",
                     )
+
+                status = self._rate_limiter.check_status()
+                self._callbacks.on_stats_updated(
+                    comments_today=status.comments_today,
+                    daily_limit=status.daily_limit,
+                    posts_scanned=posts_scraped,
+                    posts_skipped=posts_scraped - comments_attempted,
+                    success_count=comments_succeeded,
+                    fail_count=comments_failed,
+                )
 
                 await self._random_delay()
 
