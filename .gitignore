@@ -1,0 +1,9 @@
+.env
+data/browser_profile/
+data/activity.db
+logs/*.log
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+.DS_Store

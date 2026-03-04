@@ -1,0 +1,39 @@
+targets:
+  # Your own LinkedIn feed — posts from your connections (best for networking)
+  - type: feed
+    max_posts: 15
+
+  # Comments on posts from your direct connections (another networking layer)
+  - type: connections
+    max_posts: 5
+
+  # Keyword targets for topic-based discovery
+  - type: keyword
+    value: "Quantitative Finance"
+    max_posts: 5
+    recency_hours: 24
+
+  - type: keyword
+    value: "AI startup 2026"
+    max_posts: 5
+    recency_hours: 24
+
+browser:
+  headless: false
+  user_data_dir: "data/browser_profile"
+  viewport_width: 1920
+  viewport_height: 1080
+
+ai:
+  model_name: "gemini-3-flash-preview"
+  temperature: 0.85
+  max_output_tokens: 150
+
+limits:
+  daily_comment_limit: 20
+  min_delay_seconds: 15
+  max_delay_seconds: 55
+  min_wpm: 55
+  max_wpm: 80
+  min_reactions: 5
+  min_comments: 2
