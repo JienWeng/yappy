@@ -29,6 +29,8 @@ class AIConfig(BaseModel, frozen=True):
     model_name: str = "gemini-3-flash-preview"
     temperature: float = Field(default=0.85, ge=0.0, le=2.0)
     max_output_tokens: int = Field(default=300, ge=50, le=1000)
+    personality_prefix: str = ""
+    persona_preset: str = "insightful_expert"
 
 
 class LimitsConfig(BaseModel, frozen=True):

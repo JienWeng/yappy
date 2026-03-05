@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _PROMPT_TEMPLATE = """\
-You are leaving a LinkedIn comment as a sharp, thoughtful professional. Your comment will be read by {author_name} and their audience.
+{persona_block}
 
 POST:
 {post_text}
@@ -106,7 +106,14 @@ class CommentGenerator:
             existing_block = ""
             no_repeat_rule = ""
 
+        # Construct persona block
+        if self._config.personality_prefix:
+            persona_block = self._config.personality_prefix
+        else:
+            persona_block = f"You are leaving a LinkedIn comment as a sharp, thoughtful professional. Your comment will be read by {author} and their audience."
+
         return _PROMPT_TEMPLATE.format(
+            persona_block=persona_block,
             author_name=author,
             post_text=post.post_text,
             existing_comments_block=existing_block,
