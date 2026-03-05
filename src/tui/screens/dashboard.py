@@ -37,6 +37,7 @@ class DashboardScreen(Screen):
         Binding("c", "open_config", "Config", show=True),
         Binding("l", "open_log", "Log", show=True),
         Binding("q", "quit_app", "Quit", show=True),
+        Binding("escape", "quit_app", "Quit", show=False),
         Binding("a", "approve_comment", "Approve", show=False),
         Binding("x", "skip_comment", "Skip", show=False),
         Binding("e", "edit_comment", "Edit", show=False),

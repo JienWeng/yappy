@@ -26,6 +26,7 @@ class ConfigEditorScreen(Screen):
 
     BINDINGS = [
         Binding("escape", "go_back", "Back", show=True),
+        Binding("q", "go_back", "Back", show=False),
         Binding("ctrl+s", "save_config", "Save", show=True),
     ]
 

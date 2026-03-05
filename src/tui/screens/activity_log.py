@@ -14,6 +14,7 @@ class ActivityLogScreen(Screen):
 
     BINDINGS = [
         Binding("escape", "go_back", "Back", show=True),
+        Binding("q", "go_back", "Back", show=False),
         Binding("f", "filter_toggle", "Filter", show=True),
     ]
 
