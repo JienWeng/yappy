@@ -22,21 +22,25 @@ class HeaderBar(Widget):
     HeaderBar {
         dock: top;
         width: 100%;
-        height: 3;
+        height: 4;
         padding: 0 2;
         layout: horizontal;
-        background: $primary;
-        color: $text;
+        background: #1e2030;
+        color: #cad3f5;
+        border-bottom: tall #8aadf4;
     }
     HeaderBar .header-title {
         width: 1fr;
         content-align-vertical: middle;
         text-style: bold;
+        font-size: 120%;
     }
     HeaderBar .header-mode {
         width: auto;
         content-align-vertical: middle;
         margin-right: 2;
+        color: #91d7e3;
+        text-style: italic;
     }
     HeaderBar .update-badge {
         width: auto;
@@ -46,6 +50,7 @@ class HeaderBar(Widget):
         padding: 0 1;
         margin-right: 2;
         text-style: bold;
+        border: outset #ee99a0;
     }
     """
 

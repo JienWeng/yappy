@@ -13,15 +13,16 @@ class StrategyPanel(Widget):
     DEFAULT_CSS = """
     StrategyPanel {
         background: $surface;
-        border: solid $primary;
+        border: tall #8aadf4;
         padding: 1 2;
         margin: 1 0;
         height: auto;
     }
     .strategy-title {
         text-style: bold;
-        color: $accent;
+        color: #c6a0f6;
         margin-bottom: 1;
+        border-bottom: solid #c6a0f6;
     }
     .strategy-item {
         layout: horizontal;
@@ -30,6 +31,7 @@ class StrategyPanel(Widget):
     .strategy-item Label {
         width: 12;
         text-style: bold;
+        color: #91d7e3;
     }
     .strategy-item .strategy-value {
         width: 1fr;

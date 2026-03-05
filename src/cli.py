@@ -319,6 +319,11 @@ def main() -> None:
         "--clear", action="store_true", help="Remove all active schedules"
     )
 
+    # Onboarding subcommand
+    subparsers.add_parser(
+        "onboarding", help="Run the onboarding wizard manually"
+    )
+
     args = parser.parse_args()
 
     # First-run setup
@@ -327,6 +332,11 @@ def main() -> None:
 
     if args.command == "schedule":
         _handle_schedule(args)
+    elif args.command == "onboarding":
+        from src.tui.app import YappyApp
+
+        app = YappyApp(skip_onboarding=False)
+        app.run()
     elif args.report:
         _show_report(limit=args.limit)
     elif args.about:
