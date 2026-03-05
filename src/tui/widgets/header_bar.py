@@ -33,7 +33,6 @@ class HeaderBar(Widget):
         width: 1fr;
         content-align-vertical: middle;
         text-style: bold;
-        font-size: 120%;
     }
     HeaderBar .header-mode {
         width: auto;
@@ -50,7 +49,7 @@ class HeaderBar(Widget):
         padding: 0 1;
         margin-right: 2;
         text-style: bold;
-        border: outset #ee99a0;
+        border: wide #ee99a0;
     }
     """
 
