@@ -117,6 +117,13 @@ async def _run_headless() -> None:
     logger = logging.getLogger(__name__)
 
     config = load_config()
+    if not config.gemini_api_key:
+        print("\n" + "!" * 60)
+        print("  ERROR: GEMINI_API_KEY is missing.")
+        print("  Please run `yap onboarding` or set the key in ~/.config/yappy/.env")
+        print("!" * 60 + "\n")
+        return
+
     logger.info("Config loaded. Targets: %d", len(config.targets))
 
     activity_log = ActivityLog(db_path=config.db_path)

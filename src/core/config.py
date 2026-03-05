@@ -66,11 +66,6 @@ def load_env_vars() -> dict[str, str]:
         load_dotenv(local_env, override=False)
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
-    if not api_key:
-        raise EnvironmentError(
-            "GEMINI_API_KEY is not set. "
-            f"Add your key to {xdg_env} or set the environment variable."
-        )
     return {"gemini_api_key": api_key}
 
 
