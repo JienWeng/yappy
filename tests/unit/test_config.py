@@ -39,14 +39,21 @@ class TestLoadConfig:
         assert config.targets[0].value == "test keyword"
         assert config.gemini_api_key == "test-key-123"
 
-    def test_raises_when_api_key_missing(
+    def test_does_not_raise_when_api_key_missing(
         self, tmp_config: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        # Prevent load_dotenv from picking up local .env
-        monkeypatch.chdir(tmp_config.parent)
-        with pytest.raises(EnvironmentError, match="GEMINI_API_KEY"):
-            load_config(str(tmp_config))
+        from unittest.mock import patch
+        import os
+        # Fully clear env to avoid picking up keys from system
+        with patch.dict(os.environ, {}, clear=True):
+            # Mock paths.env_file to point to a non-existent file in tmp_config.parent
+            with patch("src.core.paths.env_file", return_value=tmp_config.parent / ".env.missing"):
+                # Prevent load_dotenv from picking up local .env by staying in empty tmp dir
+                monkeypatch.chdir(tmp_config.parent)
+                
+                config = load_config(str(tmp_config))
+                assert config.gemini_api_key == ""
+                # Verify it actually returns empty even if it was called
 
     def test_raises_when_config_file_not_found(
         self, monkeypatch: pytest.MonkeyPatch

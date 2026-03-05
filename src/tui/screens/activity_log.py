@@ -28,26 +28,26 @@ class ActivityLogScreen(Screen):
         height: 3;
         text-style: bold;
         content-align: center middle;
-        background: $sapphire;
+        background: #8aadf4;
         color: #1e2030;
     }
     #log-summary {
         height: 1;
         padding: 0 2;
-        background: $surface;
-        color: $mauve;
+        background: #363a4f;
+        color: #c6a0f6;
     }
     DataTable {
         height: 1fr;
-        border: tall $sapphire;
+        border: tall #8aadf4;
     }
     #log-status {
         dock: bottom;
         width: 100%;
         height: 1;
-        background: $surface;
+        background: #363a4f;
         padding: 0 2;
-        color: $sky;
+        color: #91d7e3;
     }
     """
 

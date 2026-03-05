@@ -10,6 +10,7 @@ from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import (
     Button,
+    Checkbox,
     Footer,
     Input,
     Label,
@@ -40,7 +41,7 @@ class ConfigEditorScreen(Screen):
         height: 3;
         text-style: bold;
         content-align: center middle;
-        background: $sapphire;
+        background: #8aadf4;
         color: #1e2030;
     }
     #config-tabs {
@@ -49,12 +50,12 @@ class ConfigEditorScreen(Screen):
     .config-section {
         margin-bottom: 2;
         padding: 1 4;
-        border: tall $sapphire;
+        border: tall #8aadf4;
     }
     .config-section-title {
         text-style: bold;
         margin-bottom: 1;
-        color: $mauve;
+        color: #c6a0f6;
     }
     .config-field {
         layout: horizontal;
@@ -66,7 +67,7 @@ class ConfigEditorScreen(Screen):
     }
     .config-field Input {
         width: 1fr;
-        border: solid $sapphire;
+        border: solid #8aadf4;
     }
     .config-area-field {
         height: auto;
@@ -78,10 +79,10 @@ class ConfigEditorScreen(Screen):
     }
     .config-area-field TextArea {
         height: 10;
-        border: solid $sapphire;
+        border: solid #8aadf4;
     }
     .config-help-text {
-        color: $text;
+        color: #cad3f5;
         text-style: italic;
         margin-top: 1;
         opacity: 0.7;
@@ -90,9 +91,9 @@ class ConfigEditorScreen(Screen):
         dock: bottom;
         width: 100%;
         height: 1;
-        background: $surface;
+        background: #363a4f;
         padding: 0 2;
-        color: $sky;
+        color: #91d7e3;
     }
     """
 
