@@ -170,21 +170,36 @@ class LinkedInScraper:
     async def _wait_for_feed_ready(self, page: Page) -> None:
         """Block until LinkedIn renders at least one post container, or fall through on timeout."""
         wait_selectors = (
-            POST_CONTAINER_SELECTOR,                    # search results (old design)
-            "[data-view-name='feed-full-update']",      # home feed (new design)
+            POST_CONTAINER_SELECTORS[1],                # new design preferred
+            POST_CONTAINER_SELECTORS[0],                # old design fallback
             "div[data-urn*='activity']",
             "div.scaffold-finite-scroll__content",
             "div.core-rail",
             "main",
+            ".global-nav__bar",                         # general UI presence
         )
         for sel in wait_selectors:
             try:
-                await page.wait_for_selector(sel, timeout=8_000)
+                await page.wait_for_selector(sel, timeout=10_000)
                 logger.debug("Feed ready — found element: %r", sel)
                 return
             except Exception:
                 continue
-        logger.warning("Feed ready timeout on all selectors — proceeding anyway")
+
+        # Check for "Empty Feed" signals
+        empty_signals = (
+            "div.feed-shared-empty-state",
+            "div.artdeco-empty-state",
+            "text=Nothing to see here",
+            "text=Try refreshing",
+        )
+        for sig in empty_signals:
+            if await page.query_selector(sig):
+                logger.warning("LinkedIn is showing an empty state: %r", sig)
+                break
+
+        logger.warning("Feed ready timeout on all selectors — proceeding with diagnostics")
+        await self._log_dom_diagnostics(page)
 
     async def _scroll_to_load_posts(self, page: Page, target_count: int) -> None:
         """Scroll in passes until we have target_count containers or exhaust 5 passes."""
@@ -328,6 +343,10 @@ class LinkedInScraper:
         selector = ", ".join(POST_CONTAINER_SELECTORS)
         containers = await page.query_selector_all(selector)
         logger.debug("Found %d containers with selectors: %s", len(containers), selector)
+
+        if not containers:
+            logger.error("No post containers found. Dumping DOM for diagnostics.")
+            await self._log_dom_diagnostics(page)
 
         for container in containers[: target.max_posts * 3]:  # over-fetch
             if len(posts) >= target.max_posts:
