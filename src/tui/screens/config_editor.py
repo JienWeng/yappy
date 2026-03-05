@@ -77,8 +77,7 @@ class ConfigEditorScreen(Screen):
     }
     .config-help-text {
         color: $text-muted;
-        font-size: 90%;
-        italic: true;
+        text-style: italic;
         margin-top: 1;
     }
     #config-status {
