@@ -23,16 +23,18 @@ yap
 
 ### Homebrew (macOS)
 ```bash
-brew tap jienweng/tap
-brew install yappy
-yap
+yap              # Launch TUI dashboard
+yap onboarding   # Manually run the setup wizard
+yap --no-tui     # Run in headless CLI mode
+yap --report     # Show activity report
+yap --about      # Show version and system info
 ```
 
 ---
 
-## Getting Started (Your First Run)
+## ✨ Getting Started (Your First Run)
 
-The first time you run `yap`, Yappy will launch a friendly **onboarding wizard** to help you get set up in minutes.
+The first time you run `yap`, Yappy will launch a friendly **onboarding wizard** to help you get set up in minutes. You can re-run this at any time using `yap onboarding`.
 
 1.  **Automatic Setup:** Yappy will automatically install the necessary Playwright browser and create your configuration files.
 2.  **Your AI "Brain":** You'll need a Google Gemini API key. They are currently free to get from [Google AI Studio](https://aistudio.google.com/apikey).
@@ -41,7 +43,7 @@ The first time you run `yap`, Yappy will launch a friendly **onboarding wizard**
 
 ---
 
-## Managing Your Bot
+## 📺 Managing Your Bot
 
 Yappy offers two ways to run, depending on whether you want to watch the magic happen or let it run quietly in the background.
 
@@ -49,7 +51,8 @@ Yappy offers two ways to run, depending on whether you want to watch the magic h
 Just run `yap` to open the interactive dashboard.
 *   **Live Feed:** Watch in real-time as Yappy discovers posts and drafts thoughtful comments.
 *   **Stats Panel:** Keep an eye on your daily progress and account health.
-*   **Configuration Editor:** Tweak your settings directly from within the terminal.
+*   **Current Strategy:** See your active AI persona and targeting rules at a glance.
+*   **Configuration Editor:** Tweak your settings, manage your **Gemini API Key**, and refresh your **LinkedIn Login** directly from within the terminal.
 
 ### 2. Background Mode (CLI)
 If you prefer to let Yappy work while you focus on other things:
