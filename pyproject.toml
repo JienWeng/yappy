@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yappy"
+version = "0.1.0"
+description = "AI-powered LinkedIn engagement assistant"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Jien Weng" }]
+keywords = ["linkedin", "ai", "automation", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "playwright>=1.50.0",
+    "playwright-stealth>=2.0.2",
+    "google-genai>=1.0.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "textual>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+yap = "src.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jienweng/yappy"
+Repository = "https://github.com/jienweng/yappy"
+Issues = "https://github.com/jienweng/yappy/issues"
+
+[tool.setuptools.packages.find]
+include = ["src*"]

@@ -8,6 +8,8 @@ import yaml
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 
+from src.core import paths
+
 
 class TargetConfig(BaseModel, frozen=True):
     type: Literal["keyword", "url", "feed", "connections"]
@@ -18,7 +20,7 @@ class TargetConfig(BaseModel, frozen=True):
 
 class BrowserConfig(BaseModel, frozen=True):
     headless: bool = False
-    user_data_dir: str = "data/browser_profile"
+    user_data_dir: str = ""
     viewport_width: int = 1920
     viewport_height: int = 1080
 
@@ -45,28 +47,48 @@ class AppConfig(BaseModel, frozen=True):
     ai: AIConfig = AIConfig()
     limits: LimitsConfig = LimitsConfig()
     gemini_api_key: str = ""
-    db_path: str = "data/activity.db"
+    db_path: str = ""
 
 
 def load_env_vars() -> dict[str, str]:
     """Load and validate required environment variables."""
     from dotenv import load_dotenv
 
-    load_dotenv()
+    # Load from XDG .env first, then local .env as fallback
+    xdg_env = paths.env_file()
+    local_env = Path(".env")
+
+    if xdg_env.exists():
+        load_dotenv(xdg_env)
+    if local_env.exists():
+        load_dotenv(local_env, override=False)
 
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         raise EnvironmentError(
-            "GEMINI_API_KEY is not set. Copy .env.example to .env and add your key."
+            "GEMINI_API_KEY is not set. "
+            f"Add your key to {xdg_env} or set the environment variable."
         )
     return {"gemini_api_key": api_key}
 
 
-def load_config(config_path: str = "config.yaml") -> AppConfig:
-    """Load app config from YAML file and merge environment variables."""
-    path = Path(config_path)
+def load_config(config_path: str | None = None) -> AppConfig:
+    """Load app config from YAML file and merge environment variables.
+
+    If no config_path is given, checks XDG config dir then falls back to local config.yaml.
+    """
+    if config_path is not None:
+        path = Path(config_path)
+    else:
+        xdg_config = paths.config_file()
+        local_config = Path("config.yaml")
+        path = xdg_config if xdg_config.exists() else local_config
+
     if not path.exists():
-        raise FileNotFoundError(f"Config file not found: {config_path}")
+        raise FileNotFoundError(
+            f"Config file not found: {path}\n"
+            f"Run `yap` to create a default config at {paths.config_file()}"
+        )
 
     with path.open() as f:
         raw = yaml.safe_load(f)
@@ -76,9 +98,16 @@ def load_config(config_path: str = "config.yaml") -> AppConfig:
     targets = tuple(
         TargetConfig(**t) for t in (raw.get("targets") or [])
     )
-    browser = BrowserConfig(**(raw.get("browser") or {}))
+
+    browser_raw = raw.get("browser") or {}
+    if "user_data_dir" not in browser_raw:
+        browser_raw["user_data_dir"] = str(paths.browser_profile_dir())
+    browser = BrowserConfig(**browser_raw)
+
     ai_cfg = AIConfig(**(raw.get("ai") or {}))
     limits = LimitsConfig(**(raw.get("limits") or {}))
+
+    db_path_str = raw.get("db_path", str(paths.db_path()))
 
     return AppConfig(
         targets=targets,
@@ -86,4 +115,5 @@ def load_config(config_path: str = "config.yaml") -> AppConfig:
         ai=ai_cfg,
         limits=limits,
         gemini_api_key=env_vars["gemini_api_key"],
+        db_path=db_path_str,
     )

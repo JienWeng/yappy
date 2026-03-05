@@ -50,7 +50,7 @@ class HeaderBar(Widget):
             self.mode = mode
 
     def compose(self) -> ComposeResult:
-        yield Static("LinkedIn Auto-Commenter", classes="header-title")
+        yield Static("Yappy", classes="header-title")
         yield Label(
             f"Mode: {BotMode.AUTO.value.upper()}",
             id="mode-label",

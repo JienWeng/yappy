@@ -43,6 +43,8 @@ class TestLoadConfig:
         self, tmp_config: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        # Prevent load_dotenv from picking up local .env
+        monkeypatch.chdir(tmp_config.parent)
         with pytest.raises(EnvironmentError, match="GEMINI_API_KEY"):
             load_config(str(tmp_config))
 
@@ -62,7 +64,7 @@ class TestLoadConfig:
     def test_browser_config_defaults(self) -> None:
         b = BrowserConfig()
         assert b.headless is False
-        assert b.user_data_dir == "data/browser_profile"
+        assert b.user_data_dir == ""
 
     def test_limits_config_validation(self) -> None:
         with pytest.raises(Exception):

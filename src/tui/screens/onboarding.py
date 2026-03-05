@@ -150,8 +150,8 @@ class OnboardingScreen(Screen):
 
         if step == 0:
             body.update(
-                "This tool automatically discovers LinkedIn posts and "
-                "leaves thoughtful, AI-generated comments.\n\n"
+                "Welcome to Yappy! This tool automatically discovers "
+                "LinkedIn posts and leaves thoughtful, AI-generated comments.\n\n"
                 "This wizard will guide you through:\n"
                 "  1. Setting up your Gemini API key\n"
                 "  2. Logging into LinkedIn\n"
@@ -230,8 +230,12 @@ class OnboardingScreen(Screen):
         return True
 
     def _finish_onboarding(self) -> None:
-        # Save API key to .env
-        env_path = Path(".env")
+        # Save API key to XDG .env
+        from src.core import paths
+
+        paths.ensure_dirs()
+        env_path = paths.env_file()
+
         lines: list[str] = []
         if env_path.exists():
             lines = env_path.read_text().splitlines()
@@ -240,5 +244,10 @@ class OnboardingScreen(Screen):
         ]
         new_lines.append(f"GEMINI_API_KEY={self._api_key}")
         env_path.write_text("\n".join(new_lines) + "\n")
+
+        # Also ensure config.yaml exists
+        config_file = paths.config_file()
+        if not config_file.exists():
+            config_file.write_text(paths.DEFAULT_CONFIG_YAML)
 
         self.post_message(self.OnboardingComplete())

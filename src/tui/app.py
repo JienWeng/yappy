@@ -1,4 +1,4 @@
-"""Main Textual application for LinkedIn Auto-Commenter."""
+"""Main Textual application for Yappy."""
 from __future__ import annotations
 
 import asyncio as aio
@@ -22,10 +22,12 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class LinkedInAutoCommenterApp(App):
-    """LinkedIn Auto-Commenter TUI Application."""
+class YappyApp(App):
+    """Yappy TUI Application."""
 
-    TITLE = "LinkedIn Auto-Commenter"
+    TITLE = "Yappy"
+
+    SUB_TITLE = "AI-powered LinkedIn engagement"
 
     CSS = """
     Screen {
@@ -48,11 +50,20 @@ class LinkedInAutoCommenterApp(App):
 
     def _onboarding_complete(self) -> bool:
         """Check if onboarding has been completed."""
-        env_path = Path(".env")
-        config_path = Path("config.yaml")
-        if not env_path.exists() or not config_path.exists():
+        from src.core import paths
+
+        env_path = paths.env_file()
+        config_path = paths.config_file()
+        # Also check local paths for backwards compatibility
+        local_env = Path(".env")
+        local_config = Path("config.yaml")
+
+        has_config = config_path.exists() or local_config.exists()
+        env_to_check = env_path if env_path.exists() else local_env
+
+        if not has_config or not env_to_check.exists():
             return False
-        env_text = env_path.read_text()
+        env_text = env_to_check.read_text()
         if "GEMINI_API_KEY=" not in env_text:
             return False
         key = env_text.split("GEMINI_API_KEY=")[1].split("\n")[0].strip()
@@ -80,15 +91,17 @@ class LinkedInAutoCommenterApp(App):
         self.push_screen(ConfigEditorScreen())
 
     def action_open_log(self) -> None:
-        db_path = "data/activity.db"
+        from src.core import paths
+
+        db_path_str = str(paths.db_path())
         try:
             from src.core.config import load_config
 
-            config = load_config("config.yaml")
-            db_path = config.db_path
+            config = load_config()
+            db_path_str = config.db_path
         except Exception:
             pass
-        self.push_screen(ActivityLogScreen(db_path=db_path))
+        self.push_screen(ActivityLogScreen(db_path=db_path_str))
 
     def handle_review_decision(
         self, decision: ReviewDecision, comment_text: str
@@ -125,7 +138,7 @@ class LinkedInAutoCommenterApp(App):
         self.call_from_thread(self.post_message, BotStarted())
 
         try:
-            config = load_config("config.yaml")
+            config = load_config()
             activity_log = ActivityLog(db_path=config.db_path)
             rate_limiter = RateLimiter(
                 activity_log=activity_log,
