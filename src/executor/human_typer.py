@@ -46,8 +46,7 @@ class HumanTyper:
         for i, char in enumerate(text):
             # Per-character jitter: ±30%
             delay = base_ms * random.uniform(0.70, 1.30)
-            await page.keyboard.type(char)
-            await page.wait_for_timeout(delay)
+            await page.keyboard.type(char, delay=delay)
 
             # After a space (word boundary) add a slightly longer pause ~20% of the time
             if char == " " and random.random() < 0.20:
