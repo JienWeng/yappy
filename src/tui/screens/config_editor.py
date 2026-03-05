@@ -137,12 +137,18 @@ class ConfigEditorScreen(Screen):
                             yield Label("Model Selection:")
                             yield Select(
                                 self.MODEL_OPTIONS,
-                                value="gemini-1.5-flash",
+                                value="gemini-3-flash-preview",
                                 id="cfg-model",
                             )
                         with Static(classes="config-field"):
                             yield Label("Temperature:")
                             yield Input(value="0.85", id="cfg-temperature")
+
+                    with Vertical(classes="config-section"):
+                        yield Static("BROWSER SETTINGS", classes="config-section-title")
+                        with Static(classes="config-field"):
+                            yield Label("Headless Mode:")
+                            yield Checkbox("Enabled", id="cfg-headless")
 
             with TabPane("Advanced", id="tab-advanced"):
                 with VerticalScroll():
@@ -236,6 +242,7 @@ class ConfigEditorScreen(Screen):
 
         limits = self._raw_config.get("limits", {})
         ai = self._raw_config.get("ai", {})
+        browser = self._raw_config.get("browser", {})
         targeting = self._raw_config.get("targeting", {})
 
         # Basic fields
@@ -255,11 +262,23 @@ class ConfigEditorScreen(Screen):
             except Exception:
                 pass
 
+        # Checkboxes
+        try:
+            self.query_one("#cfg-headless", Checkbox).value = browser.get(
+                "headless", False
+            )
+        except Exception:
+            pass
+
         # Advanced / Select fields
         try:
-            self.query_one("#cfg-model", Select).value = ai.get(
-                "model_name", "gemini-1.5-flash"
-            )
+            model_name = ai.get("model_name", "gemini-3-flash-preview")
+            # Safety check: ensure loaded value exists in options to avoid crash
+            valid_models = [opt[1] for opt in self.MODEL_OPTIONS]
+            if model_name not in valid_models:
+                model_name = "gemini-3-flash-preview"
+            self.query_one("#cfg-model", Select).value = model_name
+
             self.query_one("#cfg-persona-preset", Select).value = ai.get(
                 "persona_preset", "insightful_expert"
             )
@@ -399,6 +418,10 @@ class ConfigEditorScreen(Screen):
         ai["model_name"] = self.query_one("#cfg-model", Select).value
         ai["persona_preset"] = self.query_one("#cfg-persona-preset", Select).value
         ai["personality_prefix"] = self.query_one("#cfg-persona-prompt", TextArea).text
+
+        # Browser
+        browser = self._raw_config.setdefault("browser", {})
+        browser["headless"] = self.query_one("#cfg-headless", Checkbox).value
 
         # Targeting
         targeting = self._raw_config.setdefault("targeting", {})
