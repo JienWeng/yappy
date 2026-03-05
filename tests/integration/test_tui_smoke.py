@@ -33,29 +33,35 @@ class TestTUISmoke:
             assert header.mode == BotMode.AUTO
 
     @pytest.mark.asyncio
-    async def test_open_config_and_back(self):
+    async def test_navigation_consistency(self):
+        from src.tui.screens.config_editor import ConfigEditorScreen
+        from src.tui.screens.activity_log import ActivityLogScreen
+
         app = YappyApp(skip_onboarding=True)
         async with app.run_test() as pilot:
+            # Dashboard to Config
             await pilot.press("c")
-            from src.tui.screens.config_editor import ConfigEditorScreen
-
-            assert isinstance(pilot.app.screen, ConfigEditorScreen)
+            assert isinstance(app.screen, ConfigEditorScreen)
             await pilot.press("escape")
-            assert isinstance(pilot.app.screen, DashboardScreen)
+            assert isinstance(app.screen, DashboardScreen)
 
-    @pytest.mark.asyncio
-    async def test_open_log_and_back(self):
-        app = YappyApp(skip_onboarding=True)
-        async with app.run_test() as pilot:
+            # Dashboard to Log
             await pilot.press("l")
-            from src.tui.screens.activity_log import ActivityLogScreen
-
-            assert isinstance(pilot.app.screen, ActivityLogScreen)
+            assert isinstance(app.screen, ActivityLogScreen)
             await pilot.press("escape")
-            assert isinstance(pilot.app.screen, DashboardScreen)
+            assert isinstance(app.screen, DashboardScreen)
+
+            # Test 'q' on sub-screen (should also return to dashboard if configured that way, 
+            # but we unified 'q' to 'Back' on sub-screens in Task 3)
+            await pilot.press("c")
+            await pilot.press("q")
+            assert isinstance(app.screen, DashboardScreen)
 
     @pytest.mark.asyncio
-    async def test_quit(self):
+    async def test_quit_consistency(self):
         app = YappyApp(skip_onboarding=True)
         async with app.run_test() as pilot:
+            # 'q' on dashboard should quit (but in run_test it might just close the pilot)
+            # We just verify it doesn't crash
             await pilot.press("q")
+
