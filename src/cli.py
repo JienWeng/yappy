@@ -212,6 +212,53 @@ async def _run_headless() -> None:
     )
 
 
+def _show_about() -> None:
+    """Display the Ubuntu-style 'About Yappy' splash screen."""
+    from rich.columns import Columns
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.text import Text
+    import platform
+
+    console = Console()
+
+    # Catppuccin Macchiato Colors
+    SAPPHIRE = "#8aadf4"
+    MAUVE = "#c6a0f6"
+    SKY = "#91d7e3"
+    TEXT = "#cad3f5"
+
+    # Large ASCII Dog
+    dog_ascii = f"""
+[bold {MAUVE}]      __      __[/]
+[bold {MAUVE}]     /  \\____/  \\[/]
+[bold {MAUVE}]    |  __  __  |[/]
+[bold {MAUVE}]    |  [bold white]O[/]    [bold white]O[/]  |[/]
+[bold {MAUVE}]    |    [bold #ee99a0]vv[/]    |[/]
+[bold {MAUVE}]     \\  [bold #ee99a0]____[/]  /[/]
+[bold {MAUVE}]      \\______/[/]
+    """
+
+    # Project Info
+    info_text = Text.assemble(
+        (f"Yappy Assistant\n", f"bold {SAPPHIRE}"),
+        (f"{'─' * 20}\n", f"{SKY}"),
+        (f"Version: ", f"bold {TEXT}"), (f"0.1.0\n", f"{TEXT}"),
+        (f"OS:      ", f"bold {TEXT}"), (f"{platform.system()} {platform.release()}\n", f"{TEXT}"),
+        (f"Python:  ", f"bold {TEXT}"), (f"{platform.python_version()}\n", f"{TEXT}"),
+        (f"Author:  ", f"bold {TEXT}"), (f"Jien Weng\n", f"{TEXT}"),
+        (f"GitHub:  ", f"bold {TEXT}"), (f"github.com/jienweng/yappy\n", f"{SKY} underline"),
+        (f"{'─' * 20}\n", f"{SKY}"),
+        (f"Status:   ", f"bold {TEXT}"), (f"Open Source (MIT)\n", f"{TEXT}"),
+    )
+
+    # Layout using Columns
+    columns = Columns([dog_ascii, info_text])
+    console.print("\n")
+    console.print(Panel(columns, border_style=SAPPHIRE, expand=False, padding=(1, 4)))
+    console.print("\n")
+
+
 def main() -> None:
     """Entry point for the `yap` command."""
     parser = argparse.ArgumentParser(
@@ -220,6 +267,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--report", action="store_true", help="Show activity log and exit",
+    )
+    parser.add_argument(
+        "--about", action="store_true", help="Show about screen and exit",
     )
     parser.add_argument(
         "--limit", type=int, default=50,
@@ -236,6 +286,8 @@ def main() -> None:
 
     if args.report:
         _show_report(limit=args.limit)
+    elif args.about:
+        _show_about()
     elif args.no_tui:
         _setup_logging()
         asyncio.run(_run_headless())
