@@ -37,8 +37,12 @@ def _parse_count(text: str) -> int | None:
         value *= 1_000_000
     return int(value)
 
-# CSS selectors — confirmed working via DOM diagnostics 2026-02-25
-POST_CONTAINER_SELECTOR = "div.feed-shared-update-v2"
+# CSS selectors — updated 2026-03-05 for new LinkedIn feed design
+POST_CONTAINER_SELECTORS = (
+    "div.feed-shared-update-v2",
+    "[data-view-name='feed-full-update']",
+    "div[data-urn*='activity']",
+)
 
 # Text: try most-specific first, fall back to any break-words span
 POST_TEXT_SELECTORS = (
@@ -184,13 +188,13 @@ class LinkedInScraper:
 
     async def _scroll_to_load_posts(self, page: Page, target_count: int) -> None:
         """Scroll in passes until we have target_count containers or exhaust 5 passes."""
+        selector = ", ".join(POST_CONTAINER_SELECTORS)
         for pass_num in range(1, 6):
-            old_containers = await page.query_selector_all(POST_CONTAINER_SELECTOR)
-            new_containers = await page.query_selector_all("[data-view-name='feed-full-update']")
-            total = len(old_containers) + len(new_containers)
+            containers = await page.query_selector_all(selector)
+            total = len(containers)
             logger.debug(
-                "Scroll pass %d: %d containers found (need %d) [old=%d new=%d]",
-                pass_num, total, target_count, len(old_containers), len(new_containers),
+                "Scroll pass %d: %d containers found (need %d)",
+                pass_num, total, target_count
             )
             if total >= target_count:
                 return
@@ -321,10 +325,11 @@ class LinkedInScraper:
         self, page: Page, target: "TargetConfig"
     ) -> list[LinkedInPost]:
         posts: list[LinkedInPost] = []
-        containers = await page.query_selector_all(POST_CONTAINER_SELECTOR)
-        logger.debug("Found %d containers with selector %r", len(containers), POST_CONTAINER_SELECTOR)
+        selector = ", ".join(POST_CONTAINER_SELECTORS)
+        containers = await page.query_selector_all(selector)
+        logger.debug("Found %d containers with selectors: %s", len(containers), selector)
 
-        for container in containers[: target.max_posts * 2]:  # over-fetch, filter dupes
+        for container in containers[: target.max_posts * 3]:  # over-fetch
             if len(posts) >= target.max_posts:
                 break
             try:
