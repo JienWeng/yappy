@@ -354,6 +354,7 @@ class LinkedInScraper:
             try:
                 post = await self._parse_post_container(container, page, target.value)
                 if post is None:
+                    logger.debug("Container parsing returned None")
                     continue
                 if self._already_commented(post.post_url):
                     logger.debug("Skipping already-commented post: %s", post.post_url)
