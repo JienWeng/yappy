@@ -1,4 +1,4 @@
-# Tape file for VHS recording of Yappy
+# Tape file for VHS recording of Yappy v0.2.0
 # Output file
 Output demo.gif
 
@@ -11,39 +11,51 @@ Set Padding 20
 Set WindowBar Colorful
 Set Theme "Catppuccin Macchiato"
 
-# Show About screen first
+# 1. Show the About Screen
 Type "yap --about"
 Enter
 Sleep 4s
 Ctrl+L
 
-# Start Yappy
+# 2. Show the Schedule command
+Type "yap schedule --list"
+Enter
+Sleep 2s
+Ctrl+L
+
+# 3. Launch Dashboard
 Type "yap"
 Enter
-Sleep 4s
+Sleep 5s
 
-# Navigate to Stats Panel (assuming Tab or Arrow keys)
-Tab
-Sleep 2s
-Tab
+# 4. Navigate Dashboard (Show Strategy Panel)
+# Assuming initial focus is the Dashboard
 Sleep 2s
 
-# Navigate to Config Editor
-Tab
-Sleep 2s
-
-# Show the Config Editor's interactive fields
-Down
-Sleep 500ms
-Down
-Sleep 500ms
-Down
-Sleep 500ms
-
-# Back to Live Feed
-Tab
+# 5. Open Config Editor (Show Tabs)
+Type "c"
 Sleep 3s
 
-# Exit
+# 6. Switch to Advanced Tab
+Type "right"
+Sleep 3s
+
+# 7. Interact with Persona Preset
+Type "tab"
+Sleep 1s
+Type "down"
+Sleep 1s
+Type "enter"
+Sleep 2s
+
+# 8. Show Custom Prompt Area
+Type "tab"
+Sleep 2s
+
+# 9. Exit Config
+Type "escape"
+Sleep 2s
+
+# 10. Exit Yappy
 Type "q"
 Sleep 1s
