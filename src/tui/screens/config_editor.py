@@ -8,7 +8,16 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Input, Label, Static
+from textual.widgets import (
+    Footer,
+    Input,
+    Label,
+    Static,
+    TabbedContent,
+    TabPane,
+    TextArea,
+    Select,
+)
 
 
 class ConfigEditorScreen(Screen):
@@ -31,16 +40,17 @@ class ConfigEditorScreen(Screen):
         content-align: center middle;
         background: $primary;
     }
-    #config-scroll {
+    #config-tabs {
         height: 1fr;
-        padding: 1 4;
     }
     .config-section {
         margin-bottom: 2;
+        padding: 1 4;
     }
     .config-section-title {
         text-style: bold;
         margin-bottom: 1;
+        color: $accent;
     }
     .config-field {
         layout: horizontal;
@@ -53,6 +63,18 @@ class ConfigEditorScreen(Screen):
     .config-field Input {
         width: 1fr;
     }
+    .config-area-field {
+        height: auto;
+        margin-top: 1;
+    }
+    .config-area-field Label {
+        display: block;
+        margin-bottom: 1;
+    }
+    .config-area-field TextArea {
+        height: 10;
+        border: solid $primary;
+    }
     #config-status {
         dock: bottom;
         width: 100%;
@@ -61,6 +83,14 @@ class ConfigEditorScreen(Screen):
         padding: 0 2;
     }
     """
+
+    PERSONALITY_PRESETS = [
+        ("The Insightful Expert", "insightful_expert"),
+        ("The Supportive Peer", "supportive_peer"),
+        ("The Friendly Challenger", "friendly_challenger"),
+        ("The Data-Driven Analyst", "data_analyst"),
+        ("Custom", "custom"),
+    ]
 
     def __init__(
         self, config_path: str = "config.yaml", **kwargs: object
@@ -71,41 +101,83 @@ class ConfigEditorScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Static("CONFIGURATION", id="config-title")
-        with VerticalScroll(id="config-scroll"):
-            with Vertical(classes="config-section"):
-                yield Static("LIMITS", classes="config-section-title")
-                with Static(classes="config-field"):
-                    yield Label("Daily comment limit:")
-                    yield Input(value="20", id="cfg-daily-limit")
-                with Static(classes="config-field"):
-                    yield Label("Min delay (seconds):")
-                    yield Input(value="15", id="cfg-min-delay")
-                with Static(classes="config-field"):
-                    yield Label("Max delay (seconds):")
-                    yield Input(value="55", id="cfg-max-delay")
-                with Static(classes="config-field"):
-                    yield Label("Min reactions:")
-                    yield Input(value="5", id="cfg-min-reactions")
-                with Static(classes="config-field"):
-                    yield Label("Min comments:")
-                    yield Input(value="2", id="cfg-min-comments")
+        with TabbedContent(id="config-tabs"):
+            with TabPane("General", id="tab-general"):
+                with VerticalScroll():
+                    with Vertical(classes="config-section"):
+                        yield Static("LIMITS", classes="config-section-title")
+                        with Static(classes="config-field"):
+                            yield Label("Daily comment limit:")
+                            yield Input(value="20", id="cfg-daily-limit")
+                        with Static(classes="config-field"):
+                            yield Label("Min delay (seconds):")
+                            yield Input(value="15", id="cfg-min-delay")
+                        with Static(classes="config-field"):
+                            yield Label("Max delay (seconds):")
+                            yield Input(value="55", id="cfg-max-delay")
 
-            with Vertical(classes="config-section"):
-                yield Static("AI SETTINGS", classes="config-section-title")
-                with Static(classes="config-field"):
-                    yield Label("Model:")
-                    yield Input(
-                        value="gemini-3-flash-preview", id="cfg-model"
-                    )
-                with Static(classes="config-field"):
-                    yield Label("Temperature:")
-                    yield Input(value="0.85", id="cfg-temperature")
+                    with Vertical(classes="config-section"):
+                        yield Static("AI SETTINGS", classes="config-section-title")
+                        with Static(classes="config-field"):
+                            yield Label("Model:")
+                            yield Input(
+                                value="gemini-3-flash-preview", id="cfg-model"
+                            )
+                        with Static(classes="config-field"):
+                            yield Label("Temperature:")
+                            yield Input(value="0.85", id="cfg-temperature")
+
+            with TabPane("Advanced", id="tab-advanced"):
+                with VerticalScroll():
+                    with Vertical(classes="config-section"):
+                        yield Static(
+                            "PERSONALITY ENGINE", classes="config-section-title"
+                        )
+                        with Static(classes="config-field"):
+                            yield Label("Persona Preset:")
+                            yield Select(
+                                self.PERSONALITY_PRESETS,
+                                value="insightful_expert",
+                                id="cfg-persona-preset",
+                            )
+                        with Vertical(classes="config-area-field"):
+                            yield Label("Custom Prompt Prefix:")
+                            yield TextArea(id="cfg-persona-prompt")
+
+                    with Vertical(classes="config-section"):
+                        yield Static("TARGETING", classes="config-section-title")
+                        with Static(classes="config-field"):
+                            yield Label("Target Industries:")
+                            yield Input(
+                                placeholder="SaaS, Fintech, AI",
+                                id="cfg-target-industries",
+                            )
+                        with Static(classes="config-field"):
+                            yield Label("Excluded Keywords:")
+                            yield Input(
+                                placeholder="politics, crypto",
+                                id="cfg-exclude-keywords",
+                            )
 
         yield Static("Esc:Back  Ctrl+S:Save", id="config-status")
         yield Footer()
 
     def on_mount(self) -> None:
         self._load_config()
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Handle persona preset changes by pre-filling the prompt area."""
+        if event.select.id == "cfg-persona-preset" and event.value != "custom":
+            prompts = {
+                "insightful_expert": "You are a recognized expert in this field. Your comments should be analytical, provide a unique perspective, and cite potential trends.",
+                "supportive_peer": "You are a supportive colleague. Your comments should be encouraging, relate to common industry experiences, and build community.",
+                "friendly_challenger": "You are a friendly but critical thinker. Your comments should respectfully question assumptions and spark deeper discussion.",
+                "data_analyst": "You are a data-driven professional. Your comments should focus on metrics, evidence, and logical outcomes.",
+            }
+            if event.value in prompts:
+                self.query_one("#cfg-persona-prompt", TextArea).text = prompts[
+                    event.value
+                ]
 
     def _load_config(self) -> None:
         path = Path(self._config_path)
@@ -116,21 +188,36 @@ class ConfigEditorScreen(Screen):
 
         limits = self._raw_config.get("limits", {})
         ai = self._raw_config.get("ai", {})
+        targeting = self._raw_config.get("targeting", {})
 
+        # Basic fields
         field_map = {
             "cfg-daily-limit": str(limits.get("daily_comment_limit", 20)),
             "cfg-min-delay": str(limits.get("min_delay_seconds", 15)),
             "cfg-max-delay": str(limits.get("max_delay_seconds", 55)),
-            "cfg-min-reactions": str(limits.get("min_reactions", 5)),
-            "cfg-min-comments": str(limits.get("min_comments", 2)),
             "cfg-model": str(ai.get("model_name", "gemini-3-flash-preview")),
             "cfg-temperature": str(ai.get("temperature", 0.85)),
+            "cfg-target-industries": ", ".join(
+                targeting.get("industries", [])
+            ),
+            "cfg-exclude-keywords": ", ".join(targeting.get("exclude", [])),
         }
         for field_id, value in field_map.items():
             try:
                 self.query_one(f"#{field_id}", Input).value = value
             except Exception:
                 pass
+
+        # Advanced fields
+        try:
+            self.query_one("#cfg-persona-preset", Select).value = ai.get(
+                "persona_preset", "insightful_expert"
+            )
+            self.query_one("#cfg-persona-prompt", TextArea).text = ai.get(
+                "personality_prefix", ""
+            )
+        except Exception:
+            pass
 
     def action_go_back(self) -> None:
         self.app.pop_screen()
@@ -192,12 +279,23 @@ class ConfigEditorScreen(Screen):
         )
         _int_field("cfg-min-delay", "min_delay_seconds", "limits", 5, 300)
         _int_field("cfg-max-delay", "max_delay_seconds", "limits", 10, 600)
-        _int_field("cfg-min-reactions", "min_reactions", "limits", 0, 1000)
-        _int_field("cfg-min-comments", "min_comments", "limits", 0, 100)
         _float_field("cfg-temperature", "temperature", "ai", 0.0, 2.0)
 
-        model = self.query_one("#cfg-model", Input).value.strip()
-        if model:
-            self._raw_config.setdefault("ai", {})["model_name"] = model
+        # AI Advanced
+        ai = self._raw_config.setdefault("ai", {})
+        ai["model_name"] = self.query_one("#cfg-model", Input).value.strip()
+        ai["persona_preset"] = self.query_one("#cfg-persona-preset", Select).value
+        ai["personality_prefix"] = self.query_one("#cfg-persona-prompt", TextArea).text
+
+        # Targeting
+        targeting = self._raw_config.setdefault("targeting", {})
+        industries = self.query_one("#cfg-target-industries", Input).value
+        targeting["industries"] = [
+            i.strip() for i in industries.split(",") if i.strip()
+        ]
+        exclude = self.query_one("#cfg-exclude-keywords", Input).value
+        targeting["exclude"] = [
+            e.strip() for e in exclude.split(",") if e.strip()
+        ]
 
         return errors
