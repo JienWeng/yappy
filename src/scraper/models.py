@@ -27,3 +27,4 @@ class ScrapeResult:
     posts: tuple[LinkedInPost, ...]
     error: str | None
     duration_seconds: float
+    skipped_count: int = 0

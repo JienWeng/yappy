@@ -11,6 +11,7 @@ class ActivityRecord:
     comment_text: str
     status: str  # "success" | "failed"
     created_at: datetime
+    failure_reason: str | None = None
 
 
 @dataclass(frozen=True)

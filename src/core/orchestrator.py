@@ -50,6 +50,9 @@ class Orchestrator:
         self._poster = comment_poster
         self._log = activity_log
         self._callbacks: OrchestratorCallbacks = callbacks or NullCallbacks()
+        
+        # Wire up callbacks to scraper
+        self._scraper._callbacks = self._callbacks
 
     async def run(self) -> PipelineResult:
         started_at = datetime.now(timezone.utc)
@@ -69,8 +72,11 @@ class Orchestrator:
                 errors.append(error_msg)
                 continue
 
-            posts_scraped += len(scrape_result.posts)
-            logger.info("Scraped %d posts from target %r", len(scrape_result.posts), target.value)
+            posts_scraped += len(scrape_result.posts) + scrape_result.skipped_count
+            logger.info(
+                "Scraped %d posts from target %r (skipped %d due to filters)",
+                len(scrape_result.posts), target.value, scrape_result.skipped_count
+            )
 
             for post in scrape_result.posts:
                 if self._callbacks.should_stop():
@@ -127,6 +133,9 @@ class Orchestrator:
 
                     if decision == "skip":
                         logger.info("Comment skipped by user for %s", post.post_url)
+                        self._callbacks.on_post_skipped(
+                            post_url=post.post_url, reason="Skipped by user"
+                        )
                         continue
                     elif decision == "regenerate":
                         generate_result = self._generator.generate(post)
@@ -169,14 +178,16 @@ class Orchestrator:
                         post_url=post.post_url,
                         comment_text="",
                         status="failed",
+                        failure_reason=str(exc),
                     )
 
                 status = self._rate_limiter.check_status()
+                # total_skipped = (total scanned) - (those we successfully commented on)
                 self._callbacks.on_stats_updated(
                     comments_today=status.comments_today,
                     daily_limit=status.daily_limit,
                     posts_scanned=posts_scraped,
-                    posts_skipped=posts_scraped - comments_attempted,
+                    posts_skipped=posts_scraped - comments_succeeded,
                     success_count=comments_succeeded,
                     fail_count=comments_failed,
                 )

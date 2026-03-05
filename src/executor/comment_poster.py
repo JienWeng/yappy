@@ -35,14 +35,16 @@ COMMENT_SUBMIT_SELECTORS = (
     "button[type='submit']",
 )
 COMMENT_BUTTON_SELECTOR = (
-    "button[aria-label*='comment' i], "
-    "button.comment-button"
+    "button[aria-label*='comment' i]",
+    "button.comment-button",
+    "button[data-view-name='feed-full-update-comment-button']",
 )
 # Like button — match the unreacted state only (avoids accidentally un-liking)
 LIKE_BUTTON_SELECTORS = (
     "button[aria-label='React Like']",
     "button[aria-label*='Like' i]:not([aria-label*='Unlike' i])",
     "button.reactions-react-button[aria-label*='Like' i]",
+    "button[data-view-name='feed-full-update-like-button']",
 )
 WAIT_TIMEOUT_MS = 20_000
 
@@ -197,10 +199,19 @@ class CommentPoster:
                 await page.wait_for_timeout(random.uniform(1000, 2500))
 
             # Click the "Comment" trigger button to open the comment box
-            comment_btn = await page.query_selector(COMMENT_BUTTON_SELECTOR)
+            comment_btn = None
+            for sel in (COMMENT_BUTTON_SELECTOR if isinstance(COMMENT_BUTTON_SELECTOR, tuple) else (COMMENT_BUTTON_SELECTOR,)):
+                comment_btn = await page.query_selector(sel)
+                if comment_btn and await comment_btn.is_visible():
+                    logger.debug("Found visible comment button with selector: %s", sel)
+                    break
+            
             if comment_btn:
                 await comment_btn.click()
-                await page.wait_for_timeout(1000)
+                await page.wait_for_timeout(1500)
+            else:
+                logger.warning("No visible comment button found with any selector.")
+                # Maybe it is already open? Let's try to resolve the box anyway
 
             # Resolve comment box — find the first selector that actually appears
             box_selector = await self._resolve_comment_box(page)

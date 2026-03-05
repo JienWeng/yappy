@@ -46,6 +46,7 @@ POST_CONTAINER_SELECTORS = (
 
 # Text: try most-specific first, fall back to any break-words span
 POST_TEXT_SELECTORS = (
+    "[data-view-name='feed-commentary']",
     "div.feed-shared-update-v2__description span.break-words",
     "div.feed-shared-update-v2__description",
     "div[class*='commentary'] span.break-words",
@@ -54,6 +55,7 @@ POST_TEXT_SELECTORS = (
 )
 
 AUTHOR_NAME_SELECTORS = (
+    "[data-view-name='feed-header-text'] strong",
     "span.feed-shared-actor__name span[aria-hidden='true']",
     "span.feed-shared-actor__name",
     "a.app-aware-link span[aria-hidden='true']",
@@ -109,22 +111,27 @@ class LinkedInScraper:
         activity_log: "ActivityLog",
         min_reactions: int = 5,
         min_comments: int = 2,
+        callbacks: "OrchestratorCallbacks | None" = None,
     ) -> None:
         self._context = context
         self._log = activity_log
         self._min_reactions = min_reactions
         self._min_comments = min_comments
+        self._callbacks = callbacks
+        self._last_skipped_count = 0
 
     async def scrape_target(self, target: "TargetConfig") -> ScrapeResult:
         started = time.monotonic()
         page = await self._context.new_page()
         try:
+            self._last_skipped_count = 0
             posts = await self._scrape(page, target)
             return ScrapeResult(
                 target_value=target.value,
                 posts=tuple(posts),
                 error=None,
                 duration_seconds=time.monotonic() - started,
+                skipped_count=self._last_skipped_count,
             )
         except Exception as exc:
             logger.error("Scrape error for target %r: %s", target.value, exc)
@@ -150,16 +157,13 @@ class LinkedInScraper:
                 keywords=encoded,
                 hours=target.recency_hours,
             )
-        load_strategy = "load" if target.type in ("feed", "connections") else "domcontentloaded"
-        await page.goto(url, wait_until=load_strategy, timeout=WAIT_TIMEOUT_MS)
+        # Use domcontentloaded for all — LinkedIn load event can take forever due to ads/tracking
+        await page.goto(url, wait_until="domcontentloaded", timeout=WAIT_TIMEOUT_MS)
 
         logger.info("Page loaded: %s  title=%r", page.url, await page.title())
 
-        # Give LinkedIn's XHR feed API a chance to respond
-        try:
-            await page.wait_for_load_state("networkidle", timeout=8_000)
-        except Exception:
-            pass  # networkidle may never settle on an SPA — that's fine
+        # Give LinkedIn a moment to start rendering the list
+        await page.wait_for_timeout(3000)
 
         await self._wait_for_feed_ready(page)
         await self._scroll_to_load_posts(page, target_count=target.max_posts * 2)
@@ -340,6 +344,7 @@ class LinkedInScraper:
         self, page: Page, target: "TargetConfig"
     ) -> list[LinkedInPost]:
         posts: list[LinkedInPost] = []
+        skipped_count = 0
         selector = ", ".join(POST_CONTAINER_SELECTORS)
         containers = await page.query_selector_all(selector)
         logger.debug("Found %d containers with selectors: %s", len(containers), selector)
@@ -354,27 +359,46 @@ class LinkedInScraper:
             try:
                 post = await self._parse_post_container(container, page, target.value)
                 if post is None:
+                    skipped_count += 1
                     logger.debug("Container parsing returned None")
                     continue
                 if self._already_commented(post.post_url):
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason="Already commented")
                     logger.debug("Skipping already-commented post: %s", post.post_url)
                     continue
                 if self._is_company_post(post.author_profile_url):
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason="Company post")
                     logger.debug("Skipping company post: %s", post.post_url)
                     continue
                 if self._is_job_post(post.post_text):
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason="Job post")
                     logger.debug("Skipping job post: %s", post.post_url)
                     continue
                 if self._is_media_only_post(post.post_text):
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason="Media only (short text)")
                     logger.debug("Skipping media-only post (no real text): %s", post.post_url)
                     continue
                 if post.reaction_count < self._min_reactions:
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason=f"Low reactions ({post.reaction_count} < {self._min_reactions})")
                     logger.debug(
                         "Skipping low-reaction post (%d < %d): %s",
                         post.reaction_count, self._min_reactions, post.post_url,
                     )
                     continue
                 if post.comment_count < self._min_comments:
+                    skipped_count += 1
+                    if self._callbacks:
+                        self._callbacks.on_post_skipped(post_url=post.post_url, reason=f"Low comments ({post.comment_count} < {self._min_comments})")
                     logger.debug(
                         "Skipping low-comment post (%d < %d): %s",
                         post.comment_count, self._min_comments, post.post_url,
@@ -386,9 +410,14 @@ class LinkedInScraper:
                 )
                 posts.append(post)
             except Exception as exc:
+                skipped_count += 1
                 logger.warning("Failed to parse post container: %s", exc)
                 continue
 
+        # Return both posts and skipped_count by piggybacking on return if needed, 
+        # but the caller expects list[LinkedInPost].
+        # I will store it in the instance state or update scrape_target to return ScrapeResult.
+        self._last_skipped_count = skipped_count
         return posts
 
     async def _parse_post_container(
