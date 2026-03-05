@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Yappy! We welcome all types of co
 
 ---
 
-## 🛠️ Local Development Setup
+## Local Development Setup
 
 Yappy is built with Python 3.11+ and uses Playwright for browser automation.
 
@@ -35,7 +35,7 @@ playwright install chromium
 
 ---
 
-## 🧪 Testing
+## Testing
 
 We use `pytest` for testing. Please ensure all tests pass before submitting a Pull Request.
 
@@ -51,7 +51,7 @@ pytest tests/unit/test_config.py
 
 ---
 
-## 📝 Code Style & Guidelines
+## Code Style & Guidelines
 
 *   **Formatting:** We aim for clean, idiomatic Python. Please follow PEP 8.
 *   **Type Hints:** Use type hints for all new functions and classes.
@@ -60,7 +60,7 @@ pytest tests/unit/test_config.py
 
 ---
 
-## 🚀 Pull Request Process
+## Pull Request Process
 
 1.  **Branching:** Create a new branch for your work:
     *   `feat/your-feature-name`
@@ -72,6 +72,6 @@ pytest tests/unit/test_config.py
 
 ---
 
-## ⚖️ License
+## License
 
 By contributing to Yappy, you agree that your contributions will be licensed under the [MIT License](LICENSE).

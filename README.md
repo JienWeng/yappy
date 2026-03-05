@@ -9,7 +9,7 @@ Yappy is a powerful terminal-based tool that uses **Google's Gemini AI** and **P
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 Install Yappy using your favorite package manager:
 
@@ -28,7 +28,7 @@ yap
 
 ---
 
-## ✨ Getting Started (Your First Run)
+## Getting Started (Your First Run)
 
 The first time you run `yap`, Yappy will launch a friendly **onboarding wizard** to help you get set up in minutes.
 
@@ -39,7 +39,7 @@ The first time you run `yap`, Yappy will launch a friendly **onboarding wizard**
 
 ---
 
-## 📺 Managing Your Bot
+## Managing Your Bot
 
 Yappy offers two ways to run, depending on whether you want to watch the magic happen or let it run quietly in the background.
 
@@ -61,21 +61,7 @@ yap --report
 
 ---
 
-## 🛡️ Built for Quality & Safety
-
-Yappy isn't just another "bot"—it's designed to be a thoughtful assistant that protects your professional reputation.
-
-*   **The "No-Bot" Promise:** Yappy has a built-in list of "banned phrases" (like *"Great post!"* or *"Thanks for sharing!"*). It strictly avoids generic AI-isms, ensuring your comments are unique and add value to the conversation.
-*   **Context Aware:** Yappy reads the post *and* existing comments to make sure it doesn't repeat what's already been said.
-*   **Human-Like Behavior:** To stay within LinkedIn's safety boundaries, Yappy:
-    *   **"Types"** comments character-by-character with natural delays.
-    *   **Takes breaks** between posts.
-    *   **Strictly follows** daily comment limits that you control.
-*   **Privacy First:** Your API keys, LinkedIn session, and activity logs stay **100% on your local machine**. Nothing is ever sent to our servers.
-
----
-
-## ⚙️ Customization
+## Customization
 
 Configuration is stored at `~/.config/yappy/config.yaml`. You can customize your targets:
 
@@ -90,7 +76,7 @@ targets:
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
