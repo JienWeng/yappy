@@ -117,19 +117,38 @@ class Orchestrator:
                         comment_text=generate_result.comment.text,
                     )
 
+                    # Manual approval check
+                    decision, final_text = self._callbacks.on_awaiting_approval(
+                        post_url=post.post_url,
+                        author_name=post.author_name,
+                        post_preview=post.post_text[:100],
+                        comment_text=generate_result.comment.text,
+                    )
+
+                    if decision == "skip":
+                        logger.info("Comment skipped by user for %s", post.post_url)
+                        continue
+                    elif decision == "regenerate":
+                        generate_result = self._generator.generate(post)
+                        if generate_result.error:
+                            raise RuntimeError(f"Regeneration failed: {generate_result.error}")
+                        final_text = generate_result.comment.text
+
+                    final_comment = replace(generate_result.comment, text=final_text)
+
                     post_result = await self._poster.post_comment(
-                        post, generate_result.comment
+                        post, final_comment
                     )
                     if post_result.success:
                         self._log.record_comment(
                             post_url=post.post_url,
-                            comment_text=generate_result.comment.text,
+                            comment_text=final_comment.text,
                             status="success",
                         )
                         comments_succeeded += 1
                         self._callbacks.on_comment_posted(
                             post_url=post.post_url,
-                            comment_text=generate_result.comment.text,
+                            comment_text=final_comment.text,
                         )
                         logger.info(
                             "Comment posted on %s (liked=%s)",

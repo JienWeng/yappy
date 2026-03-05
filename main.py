@@ -179,11 +179,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--limit", type=int, default=50, help="Number of records to show in report (default 50)"
     )
+    parser.add_argument(
+        "--no-tui", action="store_true", help="Run without TUI (original CLI mode)"
+    )
     args = parser.parse_args()
 
     if args.report:
         from src.core.config import load_config
         cfg = load_config("config.yaml")
         show_report(db_path=cfg.db_path, limit=args.limit)
-    else:
+    elif args.no_tui:
         asyncio.run(main())
+    else:
+        from src.tui.app import LinkedInAutoCommenterApp
+        app = LinkedInAutoCommenterApp()
+        app.run()

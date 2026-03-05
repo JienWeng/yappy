@@ -36,6 +36,21 @@ class OrchestratorCallbacks(Protocol):
 
     def should_stop(self) -> bool: ...
 
+    def on_awaiting_approval(
+        self,
+        *,
+        post_url: str,
+        author_name: str,
+        post_preview: str,
+        comment_text: str,
+    ) -> tuple[str, str]:
+        """Called when a comment needs approval.
+
+        Returns (decision, comment_text) where decision is one of:
+        "approve", "skip", "regenerate".
+        """
+        ...
+
 
 class NullCallbacks:
     """No-op implementation of OrchestratorCallbacks."""
@@ -76,3 +91,13 @@ class NullCallbacks:
 
     def should_stop(self) -> bool:
         return False
+
+    def on_awaiting_approval(
+        self,
+        *,
+        post_url: str,
+        author_name: str,
+        post_preview: str,
+        comment_text: str,
+    ) -> tuple[str, str]:
+        return ("approve", comment_text)
