@@ -95,6 +95,7 @@ class OnboardingScreen(Screen):
                     id="api-key-input",
                 )
                 yield Label("", id="validation-label")
+                yield Button("Test Connection", id="btn-test-key", variant="warning")
                 yield Checkbox(
                     "Feed (your network posts)", id="cb-feed", value=True
                 )
@@ -136,14 +137,24 @@ class OnboardingScreen(Screen):
         btn_back = self.query_one("#btn-back", Button)
         btn_next = self.query_one("#btn-next", Button)
         btn_start = self.query_one("#btn-start", Button)
+        btn_test = self.query_one("#btn-test-key", Button)
 
         # Hide all dynamic elements
         for widget in (
-            api_input, validation, cb_feed, cb_conn, kw_input, mp_input,
+            api_input,
+            validation,
+            cb_feed,
+            cb_conn,
+            kw_input,
+            mp_input,
+            btn_test,
         ):
             widget.display = False
 
-        title.update(f"Step {step + 1}/5: {STEP_TITLES[step]}")
+        title.update(
+            f"Step {step + 1}/5: {STEP_TITLES[step]} "
+            f"{'•' * (step + 1)}{'◦' * (4 - step)}"
+        )
         btn_back.display = step > 0
         btn_next.display = step < 4
         btn_start.display = step == 0
@@ -166,12 +177,14 @@ class OnboardingScreen(Screen):
             )
             api_input.display = True
             validation.display = True
+            btn_test.display = True
             btn_start.display = False
         elif step == 2:
             body.update(
                 "A browser window will open.\n"
-                "Please log into your LinkedIn account.\n\n"
-                "Once you see your LinkedIn feed, click Next."
+                "Please log into your LinkedIn account manually.\n\n"
+                "⚠️ IMPORTANT: Wait until you see your actual LinkedIn feed before clicking 'Next'.\n"
+                "This ensures your session is correctly saved."
             )
             btn_start.display = False
         elif step == 3:
@@ -193,7 +206,9 @@ class OnboardingScreen(Screen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
-        if button_id == "btn-start":
+        if button_id == "btn-test-key":
+            self.run_worker(self._test_gemini_key)
+        elif button_id == "btn-start":
             self._current_step = 1
             self._render_step()
         elif button_id == "btn-next":
@@ -207,6 +222,35 @@ class OnboardingScreen(Screen):
             if self._current_step > 0:
                 self._current_step -= 1
                 self._render_step()
+
+    async def _test_gemini_key(self) -> None:
+        """Test the provided Gemini API key with a simple request."""
+        api_input = self.query_one("#api-key-input", Input)
+        key = api_input.value.strip()
+        validation = self.query_one("#validation-label", Label)
+
+        if not key:
+            validation.update("Enter a key first")
+            return
+
+        validation.update("Testing key...")
+
+        try:
+            from src.ai.gemini_client import GeminiClient
+            import os
+
+            # Temporary env override for testing
+            os.environ["GEMINI_API_KEY"] = key
+            client = GeminiClient(model_name="gemini-1.5-flash")
+            # Try to generate a single word
+            client.generate("Say 'Connected'")
+            validation.update("✅ Key works! Connection successful.")
+            validation.remove_class("error-label")
+            validation.add_class("success-label")
+        except Exception as e:
+            validation.update(f"❌ Connection failed: {str(e)}")
+            validation.add_class("error-label")
+            validation.remove_class("success-label")
 
     def action_go_back(self) -> None:
         if self._current_step > 0:
