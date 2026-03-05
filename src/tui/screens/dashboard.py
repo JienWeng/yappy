@@ -24,6 +24,7 @@ from src.tui.widgets.comment_review import CommentReview, ReviewDecision
 from src.tui.widgets.header_bar import BotMode, HeaderBar
 from src.tui.widgets.live_feed import LiveFeed
 from src.tui.widgets.stats_panel import StatsPanel
+from src.tui.widgets.strategy_panel import StrategyPanel
 
 
 class DashboardScreen(Screen):
@@ -77,11 +78,35 @@ class DashboardScreen(Screen):
         with Horizontal(id="dashboard-body"):
             with Vertical(id="stats-container"):
                 yield StatsPanel()
+                yield StrategyPanel()
             with Vertical(id="feed-container"):
                 yield LiveFeed()
                 yield CommentReview()
         yield Static("STATUS: Idle | Press s to start", id="status-bar")
         yield Footer()
+
+    def on_mount(self) -> None:
+        """Initialize strategy panel from config."""
+        try:
+            from src.core.config import load_config
+
+            config = load_config()
+            strategy = self.query_one(StrategyPanel)
+            targeting = []
+            for t in config.targets:
+                if t.type == "keyword":
+                    targeting.append(f"Keyword: {t.value}")
+                elif t.type == "feed":
+                    targeting.append("Home Feed")
+
+            # We dont have auto_like in config yet but we can pass False
+            strategy.update_strategy(
+                persona=config.ai.persona_preset,
+                targets=targeting,
+                auto_like=False,
+            )
+        except Exception:
+            pass
 
     def _update_status(self, text: str) -> None:
         try:
