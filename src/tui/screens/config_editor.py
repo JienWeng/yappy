@@ -99,9 +99,11 @@ class ConfigEditorScreen(Screen):
     ]
 
     MODEL_OPTIONS = [
-        ("Gemini 1.5 Flash (Fastest)", "gemini-1.5-flash"),
-        ("Gemini 1.5 Pro (Smarter)", "gemini-1.5-pro"),
-        ("Gemini 2.0 Flash (Experimental)", "gemini-2.0-flash-exp"),
+        ("Gemini 3.1 Pro (Frontier)", "gemini-3.1-pro-preview"),
+        ("Gemini 3.1 Flash-Lite (Fast/Cheap)", "gemini-3.1-flash-lite-preview"),
+        ("Gemini 3 Flash (Workhorse)", "gemini-3-flash-preview"),
+        ("Gemini 2.0 Flash", "gemini-2.0-flash"),
+        ("Gemini 1.5 Pro", "gemini-1.5-pro"),
     ]
 
     def __init__(
