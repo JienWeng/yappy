@@ -1,4 +1,6 @@
 class Yappy < Formula
+  include Language::Python::Virtualenv
+
   desc "AI-powered LinkedIn engagement assistant"
   homepage "https://github.com/JienWeng/yappy"
   url "https://github.com/JienWeng/yappy/archive/refs/tags/v0.1.0.tar.gz"
@@ -9,13 +11,9 @@ class Yappy < Formula
 
   def install
     virtualenv_install_with_resources
-
-    # Install the package
-    system libexec/"bin/pip", "install", "."
   end
 
   def post_install
-    # Install Playwright Chromium browser
     system libexec/"bin/python", "-m", "playwright", "install", "chromium"
   end
 
