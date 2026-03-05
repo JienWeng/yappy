@@ -228,15 +228,14 @@ def _show_about() -> None:
     SKY = "#91d7e3"
     TEXT = "#cad3f5"
 
-    # Large ASCII Dog
-    dog_ascii = f"""
-[bold {MAUVE}]      __      __[/]
-[bold {MAUVE}]     /  \\____/  \\[/]
-[bold {MAUVE}]    |  __  __  |[/]
-[bold {MAUVE}]    |  [bold white]O[/]    [bold white]O[/]  |[/]
-[bold {MAUVE}]    |    [bold #ee99a0]vv[/]    |[/]
-[bold {MAUVE}]     \\  [bold #ee99a0]____[/]  /[/]
-[bold {MAUVE}]      \\______/[/]
+    # FIGlet 'Slant' Logo
+    figlet_logo = f"""
+[bold {MAUVE}] __  __                       [/]
+[bold {MAUVE}] \\ \\/ /___ _____  ____  __  __[/]
+[bold {MAUVE}]  \\  / __ `/ __ \\/ __ \\/ / / /[/]
+[bold {MAUVE}]  / / /_/ / /_/ / /_/ / /_/ / [/]
+[bold {MAUVE}] /_/\\__,_/ .___/ .___/\\__, /  [/]
+[bold {MAUVE}]        /_/   /_/    /____/   [/]
     """
 
     # Project Info
@@ -253,7 +252,7 @@ def _show_about() -> None:
     )
 
     # Layout using Columns
-    columns = Columns([dog_ascii, info_text])
+    columns = Columns([figlet_logo, info_text])
     console.print("\n")
     console.print(Panel(columns, border_style=SAPPHIRE, expand=False, padding=(1, 4)))
     console.print("\n")

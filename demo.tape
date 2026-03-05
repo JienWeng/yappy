@@ -11,6 +11,12 @@ Set Padding 20
 Set WindowBar Colorful
 Set Theme "Catppuccin Macchiato"
 
+# Show About screen first
+Type "yap --about"
+Enter
+Sleep 4s
+Ctrl+L
+
 # Start Yappy
 Type "yap"
 Enter
