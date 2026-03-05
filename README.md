@@ -2,6 +2,8 @@
 
 AI-powered LinkedIn engagement assistant. Automatically discover LinkedIn posts and leave thoughtful, unique, AI-generated comments that actually sound like you.
 
+![Yappy Demo](demo.gif)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
