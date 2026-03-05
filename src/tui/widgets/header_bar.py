@@ -50,7 +50,8 @@ class HeaderBar(Widget):
             self.mode = mode
 
     def compose(self) -> ComposeResult:
-        yield Static("Yappy", classes="header-title")
+        # Two-tone logo: SAPPHIRE/MAUVE + Dog Emoji
+        yield Static("[#8aadf4 bold]YAP[/][#c6a0f6 bold]PY[/] 🐶", classes="header-title")
         yield Label(
             f"Mode: {BotMode.AUTO.value.upper()}",
             id="mode-label",
