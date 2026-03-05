@@ -11,6 +11,7 @@ from src.tui.events import (
     BotError,
     BotPaused,
     BotStarted,
+    BotStatus,
     BotStopped,
     CommentAwaitingApproval,
     CommentFailed,
@@ -193,6 +194,9 @@ class DashboardScreen(Screen):
         self._bot_running = True
         self.query_one(LiveFeed).add_status("Bot started")
         self._update_status("STATUS: Running")
+
+    def on_bot_status(self, event: BotStatus) -> None:
+        self.query_one(LiveFeed).add_status(event.message)
 
     def on_post_found(self, event: PostFound) -> None:
         self.query_one(LiveFeed).add_status(

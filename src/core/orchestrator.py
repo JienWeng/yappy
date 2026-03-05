@@ -78,6 +78,10 @@ class Orchestrator:
                 len(scrape_result.posts), target.value, scrape_result.skipped_count
             )
 
+            if not scrape_result.posts:
+                self._callbacks.on_status(f"No eligible posts found for target: {target.value}")
+                continue
+
             for post in scrape_result.posts:
                 if self._callbacks.should_stop():
                     break
@@ -148,6 +152,15 @@ class Orchestrator:
                     post_result = await self._poster.post_comment(
                         post, final_comment
                     )
+                    
+                    # Record like if successful
+                    if post_result.liked:
+                        self._log.record_activity(
+                            post_url=post.post_url,
+                            status="success",
+                            action_type="like",
+                        )
+
                     if post_result.success:
                         self._log.record_comment(
                             post_url=post.post_url,

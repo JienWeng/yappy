@@ -9,6 +9,14 @@ class BotStarted(Message):
     """Emitted when the bot worker starts running."""
 
 
+class BotStatus(Message):
+    """General status update from the bot."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__()
+        self.message = message
+
+
 class PostFound(Message):
     """Emitted when a new LinkedIn post is discovered."""
 

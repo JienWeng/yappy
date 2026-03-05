@@ -147,16 +147,24 @@ class LinkedInScraper:
     async def _scrape(self, page: Page, target: "TargetConfig") -> list[LinkedInPost]:
         if target.type == "feed":
             url = LINKEDIN_FEED_URL
+            msg = "Navigating to home feed..."
         elif target.type == "connections":
             url = LINKEDIN_CONNECTIONS_URL
+            msg = "Navigating to connections feed..."
         elif target.type == "url":
             url = target.value
+            msg = f"Navigating to custom URL: {url}..."
         else:  # keyword
             encoded = urllib.parse.quote_plus(target.value)
             url = LINKEDIN_SEARCH_URL.format(
                 keywords=encoded,
                 hours=target.recency_hours,
             )
+            msg = f"Searching for keyword: {target.value}..."
+        
+        if self._callbacks:
+            self._callbacks.on_status(msg)
+
         # Use domcontentloaded for all — LinkedIn load event can take forever due to ads/tracking
         await page.goto(url, wait_until="domcontentloaded", timeout=WAIT_TIMEOUT_MS)
 
@@ -165,9 +173,16 @@ class LinkedInScraper:
         # Give LinkedIn a moment to start rendering the list
         await page.wait_for_timeout(3000)
 
+        if self._callbacks:
+            self._callbacks.on_status("Waiting for feed content to render...")
         await self._wait_for_feed_ready(page)
+
+        if self._callbacks:
+            self._callbacks.on_status("Scrolling to discover more posts...")
         await self._scroll_to_load_posts(page, target_count=target.max_posts * 2)
 
+        if self._callbacks:
+            self._callbacks.on_status("Extracting and filtering posts...")
         await self._log_dom_diagnostics(page)
         return await self._extract_posts_from_page(page, target)
 

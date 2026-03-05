@@ -13,6 +13,7 @@ from src.tui.events import (
     PostFound,
     PostSkipped,
     StatsUpdated,
+    BotStatus,
 )
 
 if TYPE_CHECKING:
@@ -74,6 +75,12 @@ class BotWorkerCallbacks(NullCallbacks):
         self._app.call_from_thread(
             self._app.post_message,
             PostSkipped(post_url=post_url, reason=reason),
+        )
+
+    def on_status(self, message: str) -> None:
+        self._app.call_from_thread(
+            self._app.post_message,
+            BotStatus(message=message),
         )
 
     def on_comment_generated(

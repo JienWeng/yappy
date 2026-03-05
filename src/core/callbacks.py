@@ -13,6 +13,8 @@ class OrchestratorCallbacks(Protocol):
 
     def on_post_skipped(self, *, post_url: str, reason: str) -> None: ...
 
+    def on_status(self, message: str) -> None: ...
+
     def on_comment_generated(
         self, *, post_url: str, author_name: str, comment_text: str
     ) -> None: ...
@@ -61,6 +63,9 @@ class NullCallbacks:
         return None
 
     def on_post_skipped(self, *, post_url: str, reason: str) -> None:
+        return None
+
+    def on_status(self, message: str) -> None:
         return None
 
     def on_comment_generated(

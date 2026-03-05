@@ -34,11 +34,20 @@ async def create_persistent_context(
     Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as pw:
+        # Ensure start-maximized doesn't force a window in headless mode
+        browser_args = list(STEALTH_BROWSER_ARGS)
+        if headless:
+            if "--start-maximized" in browser_args:
+                browser_args.remove("--start-maximized")
+        
         logger.info("Launching persistent browser context (headless=%s)", headless)
+        # Force a print to stdout as well to confirm during debugging
+        print(f"DEBUG: Browser launch (headless={headless})")
+        
         context = await pw.chromium.launch_persistent_context(
             user_data_dir=user_data_dir,
             headless=headless,
-            args=list(STEALTH_BROWSER_ARGS),
+            args=browser_args,
             viewport={"width": viewport_width, "height": viewport_height},
             locale="en-US",
             timezone_id="America/New_York",

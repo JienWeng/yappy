@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS activity_log (
     comment_text TEXT NOT NULL,
     status TEXT NOT NULL CHECK(status IN ('success', 'failed')),
     failure_reason TEXT,
+    action_type TEXT DEFAULT 'comment',
     created_at TEXT NOT NULL
 )
 """
@@ -42,24 +43,51 @@ class ActivityLog:
             conn.execute(_CREATE_INDEX)
             conn.commit()
 
-    def record_comment(self, post_url: str, comment_text: str, status: str, failure_reason: str | None = None) -> None:
-        """Record a comment attempt in the log."""
+    def record_activity(
+        self,
+        post_url: str,
+        status: str,
+        action_type: str = "comment",
+        comment_text: str = "",
+        failure_reason: str | None = None,
+    ) -> None:
+        """Record an activity (comment or like) attempt in the log."""
         if status not in ("success", "failed"):
-            raise ValueError(f"Invalid status: {status!r}. Must be 'success' or 'failed'.")
+            raise ValueError(
+                f"Invalid status: {status!r}. Must be 'success' or 'failed'."
+            )
         now = datetime.now(timezone.utc).isoformat()
         with self._connect() as conn:
-            # Simple migration: try to add column if it doesn't exist
+            # Simple migrations
             try:
-                conn.execute("ALTER TABLE activity_log ADD COLUMN failure_reason TEXT")
+                conn.execute(
+                    "ALTER TABLE activity_log ADD COLUMN failure_reason TEXT"
+                )
             except sqlite3.OperationalError:
-                pass # Already exists
+                pass
+            try:
+                conn.execute(
+                    "ALTER TABLE activity_log ADD COLUMN action_type TEXT DEFAULT 'comment'"
+                )
+            except sqlite3.OperationalError:
+                pass
 
             conn.execute(
-                "INSERT INTO activity_log (post_url, comment_text, status, failure_reason, created_at) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (post_url, comment_text, status, failure_reason, now),
+                "INSERT INTO activity_log (post_url, comment_text, status, failure_reason, action_type, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (post_url, comment_text, status, failure_reason, action_type, now),
             )
             conn.commit()
+
+    def record_comment(self, post_url: str, comment_text: str, status: str, failure_reason: str | None = None) -> None:
+        """Deprecated: use record_activity instead."""
+        self.record_activity(
+            post_url=post_url,
+            status=status,
+            action_type="comment",
+            comment_text=comment_text,
+            failure_reason=failure_reason,
+        )
 
     def count_today(self) -> int:
         """Count successful comments posted today (UTC)."""
@@ -86,7 +114,7 @@ class ActivityLog:
         """Return the most recent activity records, newest first."""
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT id, post_url, comment_text, status, failure_reason, created_at "
+                "SELECT id, post_url, comment_text, status, failure_reason, action_type, created_at "
                 "FROM activity_log ORDER BY id DESC LIMIT ?",
                 (limit,),
             ).fetchall()
@@ -97,6 +125,7 @@ class ActivityLog:
                 comment_text=row["comment_text"],
                 status=row["status"],
                 failure_reason=row["failure_reason"],
+                action_type=row["action_type"],
                 created_at=datetime.fromisoformat(row["created_at"]),
             )
             for row in rows
