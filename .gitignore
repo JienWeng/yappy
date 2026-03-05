@@ -10,3 +10,5 @@ __pycache__/
 *.egg-info/
 .worktrees/
 docs/plans/
+test_dir/
+dist/
