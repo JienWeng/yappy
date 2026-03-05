@@ -258,32 +258,76 @@ def _show_about() -> None:
     console.print("\n")
 
 
+def _handle_schedule(args: argparse.Namespace) -> None:
+    """Handle the schedule subcommand."""
+    from src.core import scheduler
+
+    if args.clear:
+        print(scheduler.clear_schedules())
+    elif args.list:
+        print(scheduler.list_schedules())
+    elif args.daily:
+        print(scheduler.register_daily_run(args.daily))
+    else:
+        print("Usage: yap schedule --daily HH:MM | --list | --clear")
+
+
 def main() -> None:
     """Entry point for the `yap` command."""
     parser = argparse.ArgumentParser(
         prog="yap",
         description="Yappy — AI-powered LinkedIn engagement assistant",
     )
+    subparsers = parser.add_subparsers(dest="command")
+
+    # Root flags (for backward compatibility and quick access)
     parser.add_argument(
-        "--report", action="store_true", help="Show activity log and exit",
+        "--report",
+        action="store_true",
+        help="Show activity log and exit",
     )
     parser.add_argument(
-        "--about", action="store_true", help="Show about screen and exit",
+        "--about",
+        action="store_true",
+        help="Show about screen and exit",
     )
     parser.add_argument(
-        "--limit", type=int, default=50,
+        "--limit",
+        type=int,
+        default=50,
         help="Number of records to show in report (default 50)",
     )
     parser.add_argument(
-        "--no-tui", action="store_true", help="Run without TUI (headless CLI mode)",
+        "--no-tui",
+        action="store_true",
+        help="Run without TUI (headless CLI mode)",
     )
+
+    # Schedule subcommand
+    sched_parser = subparsers.add_parser(
+        "schedule", help="Manage background task schedules"
+    )
+    sched_parser.add_argument(
+        "--daily",
+        metavar="HH:MM",
+        help="Schedule a daily run at specified time",
+    )
+    sched_parser.add_argument(
+        "--list", action="store_true", help="List current active schedules"
+    )
+    sched_parser.add_argument(
+        "--clear", action="store_true", help="Remove all active schedules"
+    )
+
     args = parser.parse_args()
 
     # First-run setup
     _ensure_config()
     _ensure_playwright_browser()
 
-    if args.report:
+    if args.command == "schedule":
+        _handle_schedule(args)
+    elif args.report:
         _show_report(limit=args.limit)
     elif args.about:
         _show_about()
@@ -292,6 +336,7 @@ def main() -> None:
         asyncio.run(_run_headless())
     else:
         from src.tui.app import YappyApp
+
         app = YappyApp()
         app.run()
 
