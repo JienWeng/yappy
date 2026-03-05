@@ -81,6 +81,31 @@ targets:
 
 ---
 
+## Uninstall
+
+To remove Yappy from your system:
+
+### 1. Remove the package
+```bash
+pip uninstall yappy
+# OR if installed via Homebrew:
+brew uninstall yappy
+```
+
+### 2. Clean up local data (Optional)
+To completely remove your configuration, LinkedIn session, and activity logs:
+```bash
+# macOS
+rm -rf ~/Library/Application\ Support/yappy
+rm -rf ~/.config/yappy
+
+# Linux
+rm -rf ~/.local/share/yappy
+rm -rf ~/.config/yappy
+```
+
+---
+
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
