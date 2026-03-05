@@ -9,6 +9,7 @@ from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import (
+    Button,
     Footer,
     Input,
     Label,
