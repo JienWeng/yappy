@@ -55,7 +55,7 @@ class DashboardScreen(Screen):
     #stats-container {
         width: 30;
         height: 100%;
-        border-right: solid $primary;
+        border-right: tall $sapphire;
     }
     #feed-container {
         width: 1fr;
@@ -67,6 +67,7 @@ class DashboardScreen(Screen):
         height: 1;
         background: $surface;
         padding: 0 2;
+        color: $sky;
     }
     """
 

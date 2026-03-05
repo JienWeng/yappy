@@ -31,8 +31,19 @@ class YappyApp(App):
 
     CSS = """
     Screen {
-        background: $surface;
+        background: #1e2030;
+        color: #cad3f5;
     }
+    
+    /* Catppuccin Macchiato Palette */
+    $sapphire: #8aadf4;
+    $mauve: #c6a0f6;
+    $sky: #91d7e3;
+    $peach: #f5a97f;
+    $green: #a6da95;
+    $red: #ed8796;
+    $surface: #363a4f;
+    $text: #cad3f5;
     """
 
     def __init__(
@@ -49,25 +60,25 @@ class YappyApp(App):
             self.push_screen(OnboardingScreen())
 
     def _onboarding_complete(self) -> bool:
-        """Check if onboarding has been completed."""
+        """Check if onboarding has been completed by verifying the GEMINI_API_KEY."""
         from src.core import paths
+        import os
 
-        env_path = paths.env_file()
-        config_path = paths.config_file()
-        # Also check local paths for backwards compatibility
-        local_env = Path(".env")
-        local_config = Path("config.yaml")
+        # Check environment first (may already be set by user)
+        if os.environ.get("GEMINI_API_KEY"):
+            return True
 
-        has_config = config_path.exists() or local_config.exists()
-        env_to_check = env_path if env_path.exists() else local_env
-
-        if not has_config or not env_to_check.exists():
-            return False
-        env_text = env_to_check.read_text()
-        if "GEMINI_API_KEY=" not in env_text:
-            return False
-        key = env_text.split("GEMINI_API_KEY=")[1].split("\n")[0].strip()
-        return len(key) > 0
+        # Check .env files
+        env_paths = [paths.env_file(), Path(".env")]
+        for path in env_paths:
+            if path.exists():
+                text = path.read_text()
+                for line in text.splitlines():
+                    if line.startswith("GEMINI_API_KEY="):
+                        key = line.split("=", 1)[1].strip()
+                        if key and not key.startswith("your-key"):
+                            return True
+        return False
 
     def on_onboarding_screen_onboarding_complete(
         self, event: OnboardingScreen.OnboardingComplete
@@ -139,6 +150,13 @@ class YappyApp(App):
 
         try:
             config = load_config()
+            if not config.gemini_api_key:
+                self.call_from_thread(
+                    self.post_message,
+                    BotError(error="GEMINI_API_KEY is missing. Please set it in Config -> Security."),
+                )
+                return
+
             activity_log = ActivityLog(db_path=config.db_path)
             rate_limiter = RateLimiter(
                 activity_log=activity_log,

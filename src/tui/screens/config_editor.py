@@ -40,7 +40,8 @@ class ConfigEditorScreen(Screen):
         height: 3;
         text-style: bold;
         content-align: center middle;
-        background: $primary;
+        background: $sapphire;
+        color: #1e2030;
     }
     #config-tabs {
         height: 1fr;
@@ -48,11 +49,12 @@ class ConfigEditorScreen(Screen):
     .config-section {
         margin-bottom: 2;
         padding: 1 4;
+        border: tall $sapphire;
     }
     .config-section-title {
         text-style: bold;
         margin-bottom: 1;
-        color: $accent;
+        color: $mauve;
     }
     .config-field {
         layout: horizontal;
@@ -64,6 +66,7 @@ class ConfigEditorScreen(Screen):
     }
     .config-field Input {
         width: 1fr;
+        border: solid $sapphire;
     }
     .config-area-field {
         height: auto;
@@ -75,12 +78,13 @@ class ConfigEditorScreen(Screen):
     }
     .config-area-field TextArea {
         height: 10;
-        border: solid $primary;
+        border: solid $sapphire;
     }
     .config-help-text {
-        color: $text-muted;
+        color: $text;
         text-style: italic;
         margin-top: 1;
+        opacity: 0.7;
     }
     #config-status {
         dock: bottom;
@@ -88,6 +92,7 @@ class ConfigEditorScreen(Screen):
         height: 1;
         background: $surface;
         padding: 0 2;
+        color: $sky;
     }
     """
 
