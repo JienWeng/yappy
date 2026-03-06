@@ -20,8 +20,7 @@ Install Yappy using your favorite package manager:
 pip install yappy
 yap
 ```
-
-### Homebrew (macOS)
+### To run the program
 ```bash
 yap              # Launch TUI dashboard
 yap onboarding   # Manually run the setup wizard
@@ -34,7 +33,7 @@ yap --about      # Show version and system info
 
 ## ✨ Getting Started (Your First Run)
 
-The first time you run `yap`, Yappy will launch a friendly **onboarding wizard** to help you get set up in minutes. You can re-run this at any time using `yap onboarding`.
+The first time you run `yap`, Yappy will launch with onboarding wizard to help you get set up in minutes. You can re-run this at any time using `yap onboarding`.
 
 1.  **Automatic Setup:** Yappy will automatically install the necessary Playwright browser and create your configuration files.
 2.  **Your AI "Brain":** You'll need a Google Gemini API key. They are currently free to get from [Google AI Studio](https://aistudio.google.com/apikey).
