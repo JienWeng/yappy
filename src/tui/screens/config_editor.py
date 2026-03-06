@@ -137,6 +137,15 @@ class ConfigEditorScreen(Screen):
                         with Static(classes="config-field"):
                             yield Label("Max delay (seconds):")
                             yield Input(value="55", id="cfg-max-delay")
+                        with Static(classes="config-field"):
+                            yield Label("Min reactions:")
+                            yield Input(value="5", id="cfg-min-reactions")
+                        with Static(classes="config-field"):
+                            yield Label("Min comments:")
+                            yield Input(value="2", id="cfg-min-comments")
+                        with Static(classes="config-field"):
+                            yield Label("Auto-Like posts:")
+                            yield Checkbox("Enabled", value=True, id="cfg-auto-like")
 
                     with Vertical(classes="config-section"):
                         yield Static("AI SETTINGS", classes="config-section-title")
@@ -255,6 +264,14 @@ class ConfigEditorScreen(Screen):
             self.query_one("#cfg-headless", Checkbox).value = browser.get(
                 "headless", False
             )
+        except Exception:
+            pass
+
+        # New limit fields
+        try:
+            self.query_one("#cfg-min-reactions", Input).value = str(limits.get("min_reactions", 5))
+            self.query_one("#cfg-min-comments", Input).value = str(limits.get("min_comments", 2))
+            self.query_one("#cfg-auto-like", Checkbox).value = limits.get("auto_like", True)
         except Exception:
             pass
 
@@ -399,6 +416,10 @@ class ConfigEditorScreen(Screen):
         )
         _int_field("cfg-min-delay", "min_delay_seconds", "limits", 5, 300)
         _int_field("cfg-max-delay", "max_delay_seconds", "limits", 10, 600)
+        _int_field("cfg-min-reactions", "min_reactions", "limits", 0, 1000)
+        _int_field("cfg-min-comments", "min_comments", "limits", 0, 1000)
+        limits_section = self._raw_config.setdefault("limits", {})
+        limits_section["auto_like"] = self.query_one("#cfg-auto-like", Checkbox).value
 
         # Cross-field validation for min/max pairs
         limits = self._raw_config.get("limits", {})
