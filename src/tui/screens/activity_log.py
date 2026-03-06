@@ -70,7 +70,7 @@ class ActivityLogScreen(Screen):
 
     def on_mount(self) -> None:
         table = self.query_one("#log-table", DataTable)
-        table.add_columns("#", "STATUS", "TIME (UTC)", "POST URL", "COMMENT")
+        table.add_columns("#", "ACTION", "STATUS", "TIME (UTC)", "POST URL", "COMMENT")
         self._load_data()
 
     def _load_data(self) -> None:
@@ -104,8 +104,11 @@ class ActivityLogScreen(Screen):
                 else record.post_url
             )
             preview = record.comment_text[:50].replace("\n", " ")
+            action = getattr(record, "action_type", None) or "comment"
+            action_display = action.upper()
             table.add_row(
                 str(record.id),
+                action_display,
                 status_text,
                 time_str,
                 short_url,
