@@ -79,7 +79,11 @@ class Orchestrator:
             )
 
             if not scrape_result.posts:
-                self._callbacks.on_status(f"No eligible posts found for target: {target.value}")
+                self._callbacks.on_status(
+                    f"0 eligible posts from '{target.value}' "
+                    f"(scanned {scrape_result.skipped_count + len(scrape_result.posts)}, "
+                    f"skipped {scrape_result.skipped_count})"
+                )
                 continue
 
             for post in scrape_result.posts:
@@ -150,7 +154,8 @@ class Orchestrator:
                     final_comment = replace(generate_result.comment, text=final_text)
 
                     post_result = await self._poster.post_comment(
-                        post, final_comment
+                        post, final_comment,
+                        auto_like=self._config.limits.auto_like,
                     )
                     
                     # Record like if successful
