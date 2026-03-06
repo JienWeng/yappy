@@ -29,20 +29,24 @@ async def create_persistent_context(
     Async context manager that yields (playwright, context).
 
     Stealth is applied AFTER launch to avoid UA-sniff timing issues.
-    headless=False is mandatory — LinkedIn detects headless via GPU/font fingerprinting.
+    Note: LinkedIn may detect headless browsers via GPU/font fingerprinting.
+    If scraping fails in headless mode, switch to visible mode.
     """
     Path(user_data_dir).mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as pw:
-        # Ensure start-maximized doesn't force a window in headless mode
         browser_args = list(STEALTH_BROWSER_ARGS)
         if headless:
+            # Remove flags that conflict with headless
             if "--start-maximized" in browser_args:
                 browser_args.remove("--start-maximized")
-        
+            # Extra stealth args for headless to avoid detection
+            browser_args.extend([
+                "--disable-gpu",
+                "--window-size=1920,1080",
+            ])
+
         logger.info("Launching persistent browser context (headless=%s)", headless)
-        # Force a print to stdout as well to confirm during debugging
-        print(f"DEBUG: Browser launch (headless={headless})")
         
         context = await pw.chromium.launch_persistent_context(
             user_data_dir=user_data_dir,

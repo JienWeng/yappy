@@ -197,6 +197,8 @@ class YappyApp(App):
 
             headless_label = "headless" if config.browser.headless else "visible"
             _status(f"Launching browser ({headless_label})...")
+            if config.browser.headless:
+                _status("Note: headless mode may be detected by LinkedIn. Switch to visible if scraping fails.")
 
             loop = aio.new_event_loop()
             aio.set_event_loop(loop)

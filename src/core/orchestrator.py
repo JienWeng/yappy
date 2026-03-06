@@ -62,7 +62,12 @@ class Orchestrator:
         comments_failed = 0
         errors: list[str] = []
 
-        for target in self._config.targets:
+        total_targets = len(self._config.targets)
+        for t_idx, target in enumerate(self._config.targets, 1):
+            target_label = target.value or target.type
+            self._callbacks.on_status(
+                f"Target {t_idx}/{total_targets}: {target_label}"
+            )
             logger.info("Processing target: %s=%s", target.type, target.value)
             try:
                 scrape_result = await self._scraper.scrape_target(target)
@@ -78,15 +83,30 @@ class Orchestrator:
                 len(scrape_result.posts), target.value, scrape_result.skipped_count
             )
 
+            # Emit stats after scraping so the dashboard updates immediately
+            status = self._rate_limiter.check_status()
+            self._callbacks.on_stats_updated(
+                comments_today=status.comments_today,
+                daily_limit=status.daily_limit,
+                posts_scanned=posts_scraped,
+                posts_skipped=posts_scraped - comments_succeeded,
+                success_count=comments_succeeded,
+                fail_count=comments_failed,
+            )
+
             if not scrape_result.posts:
                 self._callbacks.on_status(
-                    f"0 eligible posts from '{target.value}' "
+                    f"0 eligible posts from '{target_label}' "
                     f"(scanned {scrape_result.skipped_count + len(scrape_result.posts)}, "
                     f"skipped {scrape_result.skipped_count})"
                 )
                 continue
 
-            for post in scrape_result.posts:
+            self._callbacks.on_status(
+                f"Found {len(scrape_result.posts)} eligible posts from '{target_label}'"
+            )
+
+            for p_idx, post in enumerate(scrape_result.posts, 1):
                 if self._callbacks.should_stop():
                     break
                 while self._callbacks.should_pause():
@@ -114,6 +134,10 @@ class Orchestrator:
                     )
 
                 comments_attempted += 1
+                self._callbacks.on_status(
+                    f"Processing post {p_idx}/{len(scrape_result.posts)} "
+                    f"by {post.author_name}"
+                )
                 try:
                     # Fetch real existing comments to ground the generation
                     existing = await self._scraper.fetch_comments(post.post_url, limit=4)
