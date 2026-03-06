@@ -418,6 +418,12 @@ class ConfigEditorScreen(Screen):
         )
         _int_field("cfg-min-delay", "min_delay_seconds", "limits", 5, 300)
         _int_field("cfg-max-delay", "max_delay_seconds", "limits", 10, 600)
+
+        # Cross-field validation for min/max pairs
+        limits = self._raw_config.get("limits", {})
+        if limits.get("min_delay_seconds", 15) >= limits.get("max_delay_seconds", 55):
+            errors.append("Min delay must be less than max delay")
+
         _float_field("cfg-temperature", "temperature", "ai", 0.0, 2.0)
 
         # AI Advanced

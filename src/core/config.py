@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings
 
 from src.core import paths
@@ -41,6 +41,21 @@ class LimitsConfig(BaseModel, frozen=True):
     max_wpm: int = Field(default=80, ge=30)
     min_reactions: int = Field(default=5, ge=0)
     min_comments: int = Field(default=2, ge=0)   # skip posts with fewer comments
+    auto_like: bool = True  # like posts before commenting
+
+    @model_validator(mode="after")
+    def _check_min_max(self) -> "LimitsConfig":
+        if self.min_delay_seconds >= self.max_delay_seconds:
+            raise ValueError(
+                f"min_delay_seconds ({self.min_delay_seconds}) must be less than "
+                f"max_delay_seconds ({self.max_delay_seconds})"
+            )
+        if self.min_wpm >= self.max_wpm:
+            raise ValueError(
+                f"min_wpm ({self.min_wpm}) must be less than "
+                f"max_wpm ({self.max_wpm})"
+            )
+        return self
 
 
 class AppConfig(BaseModel, frozen=True):

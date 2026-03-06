@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from pydantic import ValidationError
+
 from src.core.config import AppConfig, BrowserConfig, LimitsConfig, load_config
 
 
@@ -81,3 +83,29 @@ class TestLoadConfig:
         from src.core.config import TargetConfig
         with pytest.raises(Exception):
             TargetConfig(type="keyword", value="test", max_posts=100)  # le=50
+
+
+class TestLimitsConfigCrossFieldValidation:
+    def test_min_delay_must_be_less_than_max_delay(self) -> None:
+        with pytest.raises(ValidationError):
+            LimitsConfig(min_delay_seconds=50, max_delay_seconds=10)
+
+    def test_min_delay_equal_to_max_delay_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            LimitsConfig(min_delay_seconds=30, max_delay_seconds=30)
+
+    def test_min_wpm_must_be_less_than_max_wpm(self) -> None:
+        with pytest.raises(ValidationError):
+            LimitsConfig(min_wpm=80, max_wpm=30)
+
+    def test_min_wpm_equal_to_max_wpm_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            LimitsConfig(min_wpm=50, max_wpm=50)
+
+    def test_valid_min_max_accepted(self) -> None:
+        cfg = LimitsConfig(
+            min_delay_seconds=10, max_delay_seconds=50,
+            min_wpm=40, max_wpm=90,
+        )
+        assert cfg.min_delay_seconds < cfg.max_delay_seconds
+        assert cfg.min_wpm < cfg.max_wpm
