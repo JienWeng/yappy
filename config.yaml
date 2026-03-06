@@ -31,7 +31,4 @@ limits:
   max_wpm: 80
   min_reactions: 5
   min_comments: 2
-targeting:
-  industries:
-  - Quantitative Finance
-  exclude: []
+  auto_like: true

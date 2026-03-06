@@ -174,20 +174,6 @@ class ConfigEditorScreen(Screen):
                             yield Label("Custom Prompt Prefix:")
                             yield TextArea(id="cfg-persona-prompt")
 
-                    with Vertical(classes="config-section"):
-                        yield Static("TARGETING", classes="config-section-title")
-                        with Static(classes="config-field"):
-                            yield Label("Target Industries:")
-                            yield Input(
-                                placeholder="SaaS, Fintech, AI",
-                                id="cfg-target-industries",
-                            )
-                        with Static(classes="config-field"):
-                            yield Label("Excluded Keywords:")
-                            yield Input(
-                                placeholder="politics, crypto",
-                                id="cfg-exclude-keywords",
-                            )
 
             with TabPane("Security", id="tab-security"):
                 with VerticalScroll():
@@ -250,7 +236,6 @@ class ConfigEditorScreen(Screen):
         limits = self._raw_config.get("limits", {})
         ai = self._raw_config.get("ai", {})
         browser = self._raw_config.get("browser", {})
-        targeting = self._raw_config.get("targeting", {})
 
         # Basic fields
         field_map = {
@@ -258,10 +243,6 @@ class ConfigEditorScreen(Screen):
             "cfg-min-delay": str(limits.get("min_delay_seconds", 15)),
             "cfg-max-delay": str(limits.get("max_delay_seconds", 55)),
             "cfg-temperature": str(ai.get("temperature", 0.85)),
-            "cfg-target-industries": ", ".join(
-                targeting.get("industries", [])
-            ),
-            "cfg-exclude-keywords": ", ".join(targeting.get("exclude", [])),
         }
         for field_id, value in field_map.items():
             try:
@@ -435,16 +416,5 @@ class ConfigEditorScreen(Screen):
         # Browser
         browser = self._raw_config.setdefault("browser", {})
         browser["headless"] = self.query_one("#cfg-headless", Checkbox).value
-
-        # Targeting
-        targeting = self._raw_config.setdefault("targeting", {})
-        industries = self.query_one("#cfg-target-industries", Input).value
-        targeting["industries"] = [
-            i.strip() for i in industries.split(",") if i.strip()
-        ]
-        exclude = self.query_one("#cfg-exclude-keywords", Input).value
-        targeting["exclude"] = [
-            e.strip() for e in exclude.split(",") if e.strip()
-        ]
 
         return errors
