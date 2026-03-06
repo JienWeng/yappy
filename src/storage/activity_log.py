@@ -41,6 +41,15 @@ class ActivityLog:
         with self._connect() as conn:
             conn.execute(_CREATE_TABLE)
             conn.execute(_CREATE_INDEX)
+            # Migrate existing databases that lack newer columns
+            for col_sql in (
+                "ALTER TABLE activity_log ADD COLUMN failure_reason TEXT",
+                "ALTER TABLE activity_log ADD COLUMN action_type TEXT DEFAULT 'comment'",
+            ):
+                try:
+                    conn.execute(col_sql)
+                except sqlite3.OperationalError:
+                    pass  # column already exists
             conn.commit()
 
     def record_activity(
@@ -58,20 +67,6 @@ class ActivityLog:
             )
         now = datetime.now(timezone.utc).isoformat()
         with self._connect() as conn:
-            # Simple migrations
-            try:
-                conn.execute(
-                    "ALTER TABLE activity_log ADD COLUMN failure_reason TEXT"
-                )
-            except sqlite3.OperationalError:
-                pass
-            try:
-                conn.execute(
-                    "ALTER TABLE activity_log ADD COLUMN action_type TEXT DEFAULT 'comment'"
-                )
-            except sqlite3.OperationalError:
-                pass
-
             conn.execute(
                 "INSERT INTO activity_log (post_url, comment_text, status, failure_reason, action_type, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
@@ -90,12 +85,13 @@ class ActivityLog:
         )
 
     def count_today(self) -> int:
-        """Count successful comments posted today (UTC)."""
+        """Count successful comments posted today (UTC). Excludes likes."""
         today = datetime.now(timezone.utc).date().isoformat()
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT COUNT(*) FROM activity_log "
-                "WHERE status = 'success' AND created_at LIKE ?",
+                "WHERE status = 'success' AND created_at LIKE ? "
+                "AND (action_type = 'comment' OR action_type IS NULL)",
                 (f"{today}%",),
             ).fetchone()
         return row[0] if row else 0
@@ -105,7 +101,8 @@ class ActivityLog:
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT 1 FROM activity_log "
-                "WHERE post_url = ? AND status = 'success' LIMIT 1",
+                "WHERE post_url = ? AND status = 'success' "
+                "AND (action_type = 'comment' OR action_type IS NULL) LIMIT 1",
                 (post_url,),
             ).fetchone()
         return row is not None

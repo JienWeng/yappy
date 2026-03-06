@@ -77,7 +77,8 @@ WAIT_TIMEOUT_MS = 15_000
 
 # Reaction count selectors — try most specific first
 REACTION_COUNT_SELECTORS = (
-    "span.social-details-social-counts__reactions-count",
+    "[data-view-name='feed-reaction-count']",               # new design (2026-03)
+    "span.social-details-social-counts__reactions-count",    # old design
     "button.social-details-social-counts__count-value",
     "span[aria-label*='reaction' i]",
     "li.social-details-social-counts__item button",
@@ -85,6 +86,7 @@ REACTION_COUNT_SELECTORS = (
 
 # Comment count selectors
 COMMENT_COUNT_SELECTORS = (
+    "[data-view-name='feed-comment-count']",                 # new design (2026-03)
     "button[aria-label*='comment' i]",
     "span.social-details-social-counts__comments",
     "li.social-details-social-counts__item--right-aligned button",
@@ -438,13 +440,16 @@ class LinkedInScraper:
     async def _parse_post_container(
         self, container: object, page: Page, source_target: str
     ) -> LinkedInPost | None:
-        # --- Post URL: prefer data-urn on the container itself ---
-        data_urn = await container.get_attribute("data-urn")
+        # --- Post URL: try multiple strategies ---
         post_url: str | None = None
+
+        # Strategy 1: data-urn on container (old design)
+        data_urn = await container.get_attribute("data-urn")
         if data_urn and "activity" in data_urn:
             post_url = f"https://www.linkedin.com/feed/update/{data_urn}/"
-        else:
-            # Fallback: find the first anchor pointing to /feed/update/ or /posts/
+
+        # Strategy 2: anchor containing /feed/update/ or /posts/
+        if not post_url:
             link_el = await container.query_selector(
                 "a[href*='/feed/update/'], a[href*='/posts/']"
             )
@@ -452,6 +457,11 @@ class LinkedInScraper:
                 href = await link_el.get_attribute("href")
                 if href:
                     post_url = href.split("?")[0]
+
+        # Strategy 3 (new design 2026-03): extract activity ID from the
+        # control-menu button's aria-label via a JS probe, then derive URL
+        if not post_url:
+            post_url = await self._extract_post_url_from_js(container, page)
 
         if not post_url:
             logger.debug("Container skipped: no post URL (data-urn=%r)", data_urn)
@@ -478,6 +488,14 @@ class LinkedInScraper:
                 author_name = (await el.inner_text()).strip()
                 if author_name:
                     break
+
+        # Fallback: extract from control menu aria-label ("Open control menu for post by X")
+        if not author_name:
+            ctrl = await container.query_selector("[data-view-name='feed-control-menu']")
+            if ctrl:
+                aria = await ctrl.get_attribute("aria-label") or ""
+                if "post by " in aria:
+                    author_name = aria.split("post by ", 1)[1].strip()
 
         # --- Author URL ---
         author_url = ""
@@ -507,6 +525,79 @@ class LinkedInScraper:
             reaction_count=reaction_count,
             comment_count=comment_count,
         )
+
+    async def _extract_post_url_from_js(self, container: object, page: Page | None = None) -> str | None:
+        """New-design fallback: derive post URL from embedded component data or links."""
+        try:
+            url = await container.evaluate("""(el) => {
+                // Try time element parent link
+                const time = el.querySelector('time');
+                if (time) {
+                    const a = time.closest('a');
+                    if (a && (a.href.includes('/feed/update/') || a.href.includes('/posts/')))
+                        return a.href.split('?')[0];
+                }
+                // Try comment-count link
+                const commentCount = el.querySelector('[data-view-name="feed-comment-count"] a[href]');
+                if (commentCount) {
+                    const h = commentCount.href;
+                    if (h.includes('/feed/update/')) return h.split('?')[0];
+                }
+                // Try any /feed/update/ link
+                const updateLink = el.querySelector('a[href*="/feed/update/"]');
+                if (updateLink) return updateLink.href.split('?')[0];
+                // Try any link with activity in urn
+                const urnLink = el.querySelector('a[href*="urn%3Ali%3Aactivity"], a[href*="urn:li:activity"]');
+                if (urnLink) {
+                    const m = urnLink.href.match(/urn(?:%3A|:)li(?:%3A|:)activity(?:%3A|:)(\\d+)/);
+                    if (m) return 'https://www.linkedin.com/feed/update/urn:li:activity:' + m[1] + '/';
+                }
+                return null;
+            }""")
+            if url:
+                return url
+        except Exception:
+            pass
+
+        # Strategy 4 (2026-03): "Copy link to post" from the 3-dot control menu
+        if page is not None:
+            return await self._extract_url_via_copy_link(container, page)
+        return None
+
+    async def _extract_url_via_copy_link(
+        self, container: object, page: Page
+    ) -> str | None:
+        """Click the 3-dot menu -> 'Copy link to post' -> read clipboard."""
+        try:
+            ctrl_btn = await container.query_selector(
+                "[data-view-name='feed-control-menu']"
+            )
+            if not ctrl_btn or not await ctrl_btn.is_visible():
+                return None
+
+            await ctrl_btn.click()
+            await page.wait_for_timeout(800)
+
+            copy_option = await page.query_selector("text=Copy link to post")
+            if not copy_option or not await copy_option.is_visible():
+                await page.keyboard.press("Escape")
+                await page.wait_for_timeout(300)
+                return None
+
+            await copy_option.click()
+            await page.wait_for_timeout(500)
+
+            url = await page.evaluate("() => navigator.clipboard.readText()")
+            if url and "linkedin.com" in url:
+                return url.split("?")[0]
+            return None
+        except Exception as exc:
+            logger.debug("Copy-link extraction failed: %s", exc)
+            try:
+                await page.keyboard.press("Escape")
+            except Exception:
+                pass
+            return None
 
     async def _extract_reaction_count(self, container: object) -> int:
         """Extract the numeric reaction count from a post container."""

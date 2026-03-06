@@ -35,16 +35,18 @@ COMMENT_SUBMIT_SELECTORS = (
     "button[type='submit']",
 )
 COMMENT_BUTTON_SELECTOR = (
+    "button[data-view-name='feed-comment-button']",          # new design (2026-03)
     "button[aria-label*='comment' i]",
     "button.comment-button",
     "button[data-view-name='feed-full-update-comment-button']",
 )
 # Like button — match the unreacted state only (avoids accidentally un-liking)
 LIKE_BUTTON_SELECTORS = (
-    "button[aria-label='React Like']",
+    "button[aria-label='Reaction button state: no reaction']",  # new design (2026-03)
+    "button[data-view-name='reaction-button']",                 # new design by data-view
+    "button[aria-label='React Like']",                          # old design
     "button[aria-label*='Like' i]:not([aria-label*='Unlike' i])",
-    "button.reactions-react-button[aria-label*='Like' i]",
-    "button[data-view-name='feed-full-update-like-button']",
+    "button.reactions-react-button[aria-label*='Like' i]:not([aria-label*='Unlike' i])",
 )
 WAIT_TIMEOUT_MS = 20_000
 
@@ -176,7 +178,8 @@ class CommentPoster:
         logger.debug("---------------------------------")
 
     async def post_comment(
-        self, post: "LinkedInPost", comment: "GeneratedComment"
+        self, post: "LinkedInPost", comment: "GeneratedComment",
+        *, auto_like: bool = True,
     ) -> PostResult:
         page = await self._context.new_page()
         liked = False
@@ -192,7 +195,8 @@ class CommentPoster:
             await page.wait_for_timeout(random.uniform(1000, 2000))
 
             # Like the post while "reading" — before opening the comment box
-            liked = await self._like_post(page)
+            if auto_like:
+                liked = await self._like_post(page)
             if liked:
                 logger.info("Liked post: %s", post.post_url)
                 # Pause as a human would after reacting
