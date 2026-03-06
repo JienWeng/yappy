@@ -191,6 +191,7 @@ class DashboardScreen(Screen):
 
     def on_bot_started(self, event: BotStarted) -> None:
         self._bot_running = True
+        self.query_one(StatsPanel).reset()
         self.query_one(LiveFeed).add_status("Bot started")
         self._update_status("STATUS: Running")
 

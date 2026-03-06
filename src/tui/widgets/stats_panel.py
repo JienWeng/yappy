@@ -87,6 +87,16 @@ class StatsPanel(Widget):
         except Exception:
             pass
 
+    def reset(self) -> None:
+        self.update_stats(
+            comments_today=0,
+            daily_limit=self.daily_limit,
+            posts_scanned=0,
+            posts_skipped=0,
+            success_count=0,
+            fail_count=0,
+        )
+
     def watch_success_count(self, value: int) -> None:
         try:
             total = value + self.fail_count
