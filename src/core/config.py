@@ -66,6 +66,12 @@ class AppConfig(BaseModel, frozen=True):
     gemini_api_key: str = ""
     db_path: str = ""
 
+    @model_validator(mode="after")
+    def _check_targets(self) -> "AppConfig":
+        if not self.targets:
+            raise ValueError("At least one target must be configured")
+        return self
+
 
 def load_env_vars() -> dict[str, str]:
     """Load and validate required environment variables."""

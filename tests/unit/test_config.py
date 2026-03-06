@@ -9,7 +9,7 @@ import yaml
 
 from pydantic import ValidationError
 
-from src.core.config import AppConfig, BrowserConfig, LimitsConfig, load_config
+from src.core.config import AppConfig, BrowserConfig, LimitsConfig, TargetConfig, load_config
 
 
 def write_config(data: dict, path: Path) -> None:
@@ -80,7 +80,6 @@ class TestLoadConfig:
             LimitsConfig(daily_comment_limit=0)  # ge=1
 
     def test_limits_config_max_posts_cap(self) -> None:
-        from src.core.config import TargetConfig
         with pytest.raises(Exception):
             TargetConfig(type="keyword", value="test", max_posts=100)  # le=50
 
@@ -109,3 +108,30 @@ class TestLimitsConfigCrossFieldValidation:
         )
         assert cfg.min_delay_seconds < cfg.max_delay_seconds
         assert cfg.min_wpm < cfg.max_wpm
+
+
+class TestAppConfigTargetValidation:
+    def test_empty_targets_raises(self) -> None:
+        """AppConfig with no targets should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            AppConfig(targets=())
+
+    def test_default_targets_raises(self) -> None:
+        """AppConfig with default (empty) targets should raise ValidationError."""
+        with pytest.raises(ValidationError):
+            AppConfig()
+
+    def test_single_target_accepted(self) -> None:
+        """AppConfig with at least one target should be valid."""
+        cfg = AppConfig(targets=(TargetConfig(type="feed"),))
+        assert len(cfg.targets) == 1
+
+    def test_multiple_targets_accepted(self) -> None:
+        """AppConfig with multiple targets should be valid."""
+        cfg = AppConfig(
+            targets=(
+                TargetConfig(type="feed"),
+                TargetConfig(type="keyword", value="python"),
+            ),
+        )
+        assert len(cfg.targets) == 2
