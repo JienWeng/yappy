@@ -18,15 +18,15 @@ Sleep 4s
 Ctrl+L
 
 # 2. Show the Schedule command
-Type "yap schedule --list"
-Enter
-Sleep 2s
-Ctrl+L
+# Type "yap schedule --list"
+# Enter
+# Sleep 2s
+# Ctrl+L
 
 # 3. Launch Dashboard
 Type "yap"
 Enter
-Sleep 5s
+Sleep 2s
 
 # 4. Navigate Dashboard (Show Strategy Panel)
 # Assuming initial focus is the Dashboard

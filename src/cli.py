@@ -43,13 +43,13 @@ def _ensure_playwright_browser() -> None:
     except Exception:
         pass
 
-    print("Installing Playwright Chromium browser (first run only)...")
+    # print("Installing Playwright Chromium browser (first run only)...")
     try:
         subprocess.run(
             [sys.executable, "-m", "playwright", "install", "chromium"],
             check=True,
         )
-        print("Browser installed successfully.")
+        # print("Browser installed successfully.")
     except subprocess.CalledProcessError as exc:
         print(f"Failed to install Playwright browser: {exc}", file=sys.stderr)
         print("Try running manually: python -m playwright install chromium", file=sys.stderr)

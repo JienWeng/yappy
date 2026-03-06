@@ -12,3 +12,4 @@ __pycache__/
 docs/plans/
 test_dir/
 dist/
+*tape
