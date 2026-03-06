@@ -1,6 +1,8 @@
 """Main dashboard screen with stats panel, live feed, and controls."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -75,6 +77,7 @@ class DashboardScreen(Screen):
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._bot_running = False
+        self._bot_started_at: datetime | None = None
 
     def compose(self) -> ComposeResult:
         yield HeaderBar()
@@ -191,6 +194,7 @@ class DashboardScreen(Screen):
 
     def on_bot_started(self, event: BotStarted) -> None:
         self._bot_running = True
+        self._bot_started_at = datetime.now(timezone.utc)
         self.query_one(StatsPanel).reset()
         self.query_one(LiveFeed).add_status("Bot started")
         self._update_status("STATUS: Running")
@@ -239,11 +243,16 @@ class DashboardScreen(Screen):
             success_count=event.success_count,
             fail_count=event.fail_count,
         )
+        elapsed = ""
+        if self._bot_started_at:
+            delta = datetime.now(timezone.utc) - self._bot_started_at
+            mins, secs = divmod(int(delta.total_seconds()), 60)
+            elapsed = f" | {mins}m{secs:02d}s"
         mode = self.query_one(HeaderBar).mode.value.upper()
         self._update_status(
             f"STATUS: Running | "
             f"{event.comments_today}/{event.daily_limit} comments | "
-            f"Mode: {mode}"
+            f"Mode: {mode}{elapsed}"
         )
 
     def on_bot_paused(self, event: BotPaused) -> None:
@@ -252,12 +261,14 @@ class DashboardScreen(Screen):
 
     def on_bot_stopped(self, event: BotStopped) -> None:
         self._bot_running = False
+        self._bot_started_at = None
         reason = f" ({event.reason})" if event.reason else ""
         self._update_status(f"STATUS: Stopped{reason} | Press s to start")
         self.query_one(LiveFeed).add_status(f"Bot stopped{reason}")
 
     def on_bot_error(self, event: BotError) -> None:
         self._bot_running = False
+        self._bot_started_at = None
         self._update_status(f"STATUS: Error: {event.error}")
         self.query_one(LiveFeed).add_failed("bot", event.error)
 
