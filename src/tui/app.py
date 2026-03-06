@@ -96,10 +96,10 @@ class YappyApp(App):
         if self._worker_callbacks:
             if self._worker_callbacks.should_pause():
                 self._worker_callbacks.request_resume()
-                self.post_message(BotStatus(message="Bot resumed"))
+                self.screen.post_message(BotStatus(message="Bot resumed"))
             else:
                 self._worker_callbacks.request_pause()
-                self.post_message(BotPaused())
+                self.screen.post_message(BotPaused())
 
     def action_open_config(self) -> None:
         self.push_screen(ConfigEditorScreen())
@@ -148,12 +148,13 @@ class YappyApp(App):
         from src.storage.activity_log import ActivityLog
         from src.tui.events import BotError, BotStarted, BotStatus, BotStopped
 
+        screen = self.screen
         self._worker_callbacks = BotWorkerCallbacks(app=self)
-        self.call_from_thread(self.post_message, BotStarted())
+        self.call_from_thread(screen.post_message, BotStarted())
 
         def _status(msg: str) -> None:
             self.call_from_thread(
-                self.post_message, BotStatus(message=msg)
+                screen.post_message, BotStatus(message=msg)
             )
 
         try:
@@ -161,7 +162,7 @@ class YappyApp(App):
             config = load_config()
             if not config.gemini_api_key:
                 self.call_from_thread(
-                    self.post_message,
+                    screen.post_message,
                     BotError(error="GEMINI_API_KEY is missing. Please set it in Config -> Security."),
                 )
                 return
@@ -175,7 +176,7 @@ class YappyApp(App):
             status = rate_limiter.check_status()
             if status.limit_reached:
                 self.call_from_thread(
-                    self.post_message,
+                    screen.post_message,
                     BotStopped(reason="Daily limit already reached"),
                 )
                 return
@@ -237,13 +238,13 @@ class YappyApp(App):
             loop.close()
 
             self.call_from_thread(
-                self.post_message,
+                screen.post_message,
                 BotStopped(reason="Pipeline complete"),
             )
 
         except Exception as exc:
             logger.exception("Bot worker error")
             self.call_from_thread(
-                self.post_message,
+                screen.post_message,
                 BotError(error=str(exc)),
             )

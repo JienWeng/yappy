@@ -164,3 +164,30 @@ class TestBotError:
         event = BotError(error="Connection lost")
         assert event.error == "Connection lost"
         assert isinstance(event, Message)
+
+
+class TestMessageRoutingToScreen:
+    """Verify messages posted on screen (not app) reach DashboardScreen handlers."""
+
+    def test_app_post_message_does_not_reach_screen(self) -> None:
+        """Textual messages bubble UP, so app.post_message never reaches child screens."""
+        import inspect
+        from src.tui.app import YappyApp
+
+        source = inspect.getsource(YappyApp._run_bot)
+        # _run_bot must NOT use self.post_message (posts on App, never reaches Screen)
+        # It should use screen.post_message instead
+        assert "self.post_message" not in source, (
+            "_run_bot must post on screen, not app — "
+            "app.post_message drops messages (Textual bubbles UP only)"
+        )
+
+    def test_bot_worker_posts_on_screen(self) -> None:
+        """BotWorkerCallbacks must post on screen, not app."""
+        import inspect
+        from src.tui.workers.bot_worker import BotWorkerCallbacks
+
+        source = inspect.getsource(BotWorkerCallbacks)
+        assert "self._app.post_message" not in source, (
+            "BotWorkerCallbacks must use self._screen.post_message, not self._app.post_message"
+        )

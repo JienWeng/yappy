@@ -25,10 +25,15 @@ class BotWorkerCallbacks(NullCallbacks):
 
     Runs in a worker thread. Uses app.call_from_thread() to safely
     post messages to the Textual event loop.
+
+    Messages are posted on the active *screen* (not the App) because
+    Textual messages bubble UP — posting on App means handlers on
+    DashboardScreen never see them.
     """
 
     def __init__(self, app: "App") -> None:
         self._app = app
+        self._screen = app.screen
         self._pause_event = threading.Event()
         self._stop_event = threading.Event()
         self._manual_mode = False
@@ -63,7 +68,7 @@ class BotWorkerCallbacks(NullCallbacks):
         self, *, post_url: str, author_name: str, text_preview: str
     ) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             PostFound(
                 post_url=post_url,
                 author_name=author_name,
@@ -73,13 +78,13 @@ class BotWorkerCallbacks(NullCallbacks):
 
     def on_post_skipped(self, *, post_url: str, reason: str) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             PostSkipped(post_url=post_url, reason=reason),
         )
 
     def on_status(self, message: str) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             BotStatus(message=message),
         )
 
@@ -87,7 +92,7 @@ class BotWorkerCallbacks(NullCallbacks):
         self, *, post_url: str, author_name: str, comment_text: str
     ) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             CommentGenerated(
                 post_url=post_url,
                 author_name=author_name,
@@ -97,13 +102,13 @@ class BotWorkerCallbacks(NullCallbacks):
 
     def on_comment_posted(self, *, post_url: str, comment_text: str) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             CommentPosted(post_url=post_url, comment_text=comment_text),
         )
 
     def on_comment_failed(self, *, post_url: str, error: str) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             CommentFailed(post_url=post_url, error=error),
         )
 
@@ -118,7 +123,7 @@ class BotWorkerCallbacks(NullCallbacks):
         fail_count: int,
     ) -> None:
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             StatsUpdated(
                 comments_today=comments_today,
                 daily_limit=daily_limit,
@@ -141,7 +146,7 @@ class BotWorkerCallbacks(NullCallbacks):
             return ("approve", comment_text)
 
         self._app.call_from_thread(
-            self._app.post_message,
+            self._screen.post_message,
             CommentAwaitingApproval(
                 post_url=post_url,
                 author_name=author_name,
