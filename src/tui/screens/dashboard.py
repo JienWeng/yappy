@@ -102,11 +102,10 @@ class DashboardScreen(Screen):
                 elif t.type == "feed":
                     targeting.append("Home Feed")
 
-            # We dont have auto_like in config yet but we can pass False
             strategy.update_strategy(
                 persona=config.ai.persona_preset,
                 targets=targeting,
-                auto_like=False,
+                auto_like=config.limits.auto_like,
             )
         except Exception:
             pass
@@ -247,7 +246,7 @@ class DashboardScreen(Screen):
         )
 
     def on_bot_paused(self, event: BotPaused) -> None:
-        self._update_status("STATUS: Paused | Press s to resume")
+        self._update_status("STATUS: Paused | Press p to resume")
         self.query_one(LiveFeed).add_status("Bot paused")
 
     def on_bot_stopped(self, event: BotStopped) -> None:

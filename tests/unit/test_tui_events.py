@@ -6,6 +6,7 @@ from src.tui.events import (
     BotError,
     BotPaused,
     BotStarted,
+    BotStatus,
     BotStopped,
     CommentAwaitingApproval,
     CommentFailed,
@@ -131,6 +132,31 @@ class TestBotStopped:
     def test_construction_with_custom_reason(self) -> None:
         event = BotStopped(reason="user requested")
         assert event.reason == "user requested"
+
+
+class TestBotStatus:
+    def test_construction_and_attributes(self) -> None:
+        event = BotStatus(message="Bot resumed")
+        assert event.message == "Bot resumed"
+        assert isinstance(event, Message)
+
+
+class TestPauseResumeStatusText:
+    """Verify the dashboard shows 'p to resume' (not 's to resume') on pause."""
+
+    def test_paused_status_contains_p_to_resume(self) -> None:
+        """The on_bot_paused handler must tell users to press p, not s."""
+        # Import here to avoid circular import issues at module level
+        from src.tui.screens.dashboard import DashboardScreen
+        import inspect
+
+        source = inspect.getsource(DashboardScreen.on_bot_paused)
+        assert "p to resume" in source, (
+            "on_bot_paused should instruct 'press p to resume'"
+        )
+        assert "s to resume" not in source, (
+            "on_bot_paused must NOT say 'press s to resume'"
+        )
 
 
 class TestBotError:

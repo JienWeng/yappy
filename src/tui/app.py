@@ -14,6 +14,7 @@ from src.tui.screens.config_editor import ConfigEditorScreen
 from src.tui.screens.dashboard import DashboardScreen
 from src.tui.screens.onboarding import OnboardingScreen
 from src.tui.widgets.comment_review import ReviewDecision
+from src.tui.events import BotPaused, BotStatus
 from src.tui.workers.bot_worker import BotWorkerCallbacks
 
 if TYPE_CHECKING:
@@ -95,8 +96,10 @@ class YappyApp(App):
         if self._worker_callbacks:
             if self._worker_callbacks.should_pause():
                 self._worker_callbacks.request_resume()
+                self.post_message(BotStatus(message="Bot resumed"))
             else:
                 self._worker_callbacks.request_pause()
+                self.post_message(BotPaused())
 
     def action_open_config(self) -> None:
         self.push_screen(ConfigEditorScreen())
@@ -143,12 +146,18 @@ class YappyApp(App):
         from src.scraper.browser_factory import create_persistent_context
         from src.scraper.linkedin_scraper import LinkedInScraper
         from src.storage.activity_log import ActivityLog
-        from src.tui.events import BotError, BotStarted, BotStopped
+        from src.tui.events import BotError, BotStarted, BotStatus, BotStopped
 
         self._worker_callbacks = BotWorkerCallbacks(app=self)
         self.call_from_thread(self.post_message, BotStarted())
 
+        def _status(msg: str) -> None:
+            self.call_from_thread(
+                self.post_message, BotStatus(message=msg)
+            )
+
         try:
+            _status("Loading config...")
             config = load_config()
             if not config.gemini_api_key:
                 self.call_from_thread(
@@ -171,6 +180,8 @@ class YappyApp(App):
                 )
                 return
 
+            _status(f"Rate limit: {status.comments_today}/{status.daily_limit} comments used today")
+
             human_typer = HumanTyper(
                 min_wpm=config.limits.min_wpm,
                 max_wpm=config.limits.max_wpm,
@@ -184,6 +195,9 @@ class YappyApp(App):
                 client=gemini_client, config=config.ai
             )
 
+            headless_label = "headless" if config.browser.headless else "visible"
+            _status(f"Launching browser ({headless_label})...")
+
             loop = aio.new_event_loop()
             aio.set_event_loop(loop)
 
@@ -194,6 +208,9 @@ class YappyApp(App):
                     viewport_width=config.browser.viewport_width,
                     viewport_height=config.browser.viewport_height,
                 ) as (_, context):
+                    _status("Browser ready. Starting pipeline...")
+                    like_label = "comment + like" if config.limits.auto_like else "comment only"
+                    _status(f"Mode: {like_label} | Targets: {len(config.targets)}")
                     scraper = LinkedInScraper(
                         context=context,
                         activity_log=activity_log,
