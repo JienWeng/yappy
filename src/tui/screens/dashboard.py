@@ -123,6 +123,7 @@ class DashboardScreen(Screen):
 
     def action_start_bot(self) -> None:
         if self._bot_running:
+            self._update_status("STATUS: Bot is already running")
             return
         self._bot_running = True
         self._update_status("STATUS: Starting...")
