@@ -1,7 +1,6 @@
 """Module for OS-native scheduling of Yappy tasks."""
 from __future__ import annotations
 
-import os
 import platform
 import subprocess
 import sys
@@ -11,10 +10,10 @@ from pathlib import Path
 def register_daily_run(time_str: str) -> str:
     """
     Schedule a daily run of Yappy at the specified time.
-    
+
     Args:
         time_str: Time in HH:MM format.
-        
+
     Returns:
         Success message or error.
     """
@@ -72,7 +71,7 @@ def _schedule_mac(time_str: str) -> str:
     # Load the agent
     subprocess.run(["launchctl", "unload", str(plist_path)], capture_output=True)
     result = subprocess.run(["launchctl", "load", str(plist_path)], capture_output=True)
-    
+
     if result.returncode == 0:
         return f"Successfully scheduled daily run at {time_str} (macOS LaunchAgent)"
     else:
@@ -88,7 +87,7 @@ def _schedule_linux(time_str: str) -> str:
 
     executable = sys.argv[0]
     cron_cmd = f"{minute} {hour} * * * {executable} --no-tui >> ~/.config/yappy/scheduler.log 2>&1"
-    
+
     try:
         # Get current crontab
         current_cron = subprocess.run(["crontab", "-l"], capture_output=True, text=True).stdout
@@ -99,7 +98,7 @@ def _schedule_linux(time_str: str) -> str:
             new_cron = "\n".join(lines) + "\n"
         else:
             new_cron = current_cron + f"\n# yappy daily run\n{cron_cmd}\n"
-            
+
         subprocess.run(["crontab", "-"], input=new_cron, text=True, check=True)
         return f"Successfully scheduled daily run at {time_str} (Linux crontab)"
     except Exception as e:

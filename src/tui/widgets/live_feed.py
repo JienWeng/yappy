@@ -1,7 +1,7 @@
 """Live feed widget showing real-time bot activity."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -35,7 +35,7 @@ class LiveFeed(Widget):
         yield RichLog(highlight=True, markup=True, id="feed-log")
 
     def _timestamp(self) -> str:
-        return datetime.now(timezone.utc).strftime("%H:%M")
+        return datetime.now(UTC).strftime("%H:%M")
 
     def _write(self, text: str) -> None:
         try:

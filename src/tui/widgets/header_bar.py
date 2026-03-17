@@ -1,7 +1,7 @@
 """Header bar widget with app title and mode toggle."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from textual.app import ComposeResult
 from textual.message import Message
@@ -10,7 +10,7 @@ from textual.widget import Widget
 from textual.widgets import Label, Static
 
 
-class BotMode(str, Enum):
+class BotMode(StrEnum):
     AUTO = "auto"
     MANUAL = "manual"
 

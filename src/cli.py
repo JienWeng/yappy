@@ -4,10 +4,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
-import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 from src.core import paths
 
@@ -107,7 +105,7 @@ async def _run_headless() -> None:
     from src.ai.gemini_client import GeminiClient
     from src.core.config import load_config
     from src.core.orchestrator import Orchestrator
-    from src.core.rate_limiter import DailyLimitExceededError, RateLimiter
+    from src.core.rate_limiter import RateLimiter
     from src.executor.comment_poster import CommentPoster
     from src.executor.human_typer import HumanTyper
     from src.scraper.browser_factory import create_persistent_context
@@ -221,11 +219,12 @@ async def _run_headless() -> None:
 
 def _show_about() -> None:
     """Display the Ubuntu-style 'About Yappy' splash screen."""
+    import platform
+
     from rich.columns import Columns
     from rich.console import Console
     from rich.panel import Panel
     from rich.text import Text
-    import platform
 
     console = Console()
 
@@ -247,15 +246,15 @@ def _show_about() -> None:
 
     # Project Info
     info_text = Text.assemble(
-        (f"Yappy Assistant\n", f"bold {SAPPHIRE}"),
+        ("Yappy Assistant\n", f"bold {SAPPHIRE}"),
         (f"{'─' * 20}\n", f"{SKY}"),
-        (f"Version: ", f"bold {TEXT}"), (f"0.1.0\n", f"{TEXT}"),
-        (f"OS:      ", f"bold {TEXT}"), (f"{platform.system()} {platform.release()}\n", f"{TEXT}"),
-        (f"Python:  ", f"bold {TEXT}"), (f"{platform.python_version()}\n", f"{TEXT}"),
-        (f"Author:  ", f"bold {TEXT}"), (f"Jien Weng\n", f"{TEXT}"),
-        (f"GitHub:  ", f"bold {TEXT}"), (f"github.com/jienweng/yappy\n", f"{SKY} underline"),
+        ("Version: ", f"bold {TEXT}"), ("0.1.0\n", f"{TEXT}"),
+        ("OS:      ", f"bold {TEXT}"), (f"{platform.system()} {platform.release()}\n", f"{TEXT}"),
+        ("Python:  ", f"bold {TEXT}"), (f"{platform.python_version()}\n", f"{TEXT}"),
+        ("Author:  ", f"bold {TEXT}"), ("Jien Weng\n", f"{TEXT}"),
+        ("GitHub:  ", f"bold {TEXT}"), ("github.com/jienweng/yappy\n", f"{SKY} underline"),
         (f"{'─' * 20}\n", f"{SKY}"),
-        (f"Status:   ", f"bold {TEXT}"), (f"Open Source (MIT)\n", f"{TEXT}"),
+        ("Status:   ", f"bold {TEXT}"), ("Open Source (MIT)\n", f"{TEXT}"),
     )
 
     # Layout using Columns

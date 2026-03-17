@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 from playwright.async_api import BrowserContext, Playwright, async_playwright
 from playwright_stealth import Stealth
@@ -47,7 +47,7 @@ async def create_persistent_context(
             ])
 
         logger.info("Launching persistent browser context (headless=%s)", headless)
-        
+
         context = await pw.chromium.launch_persistent_context(
             user_data_dir=user_data_dir,
             headless=headless,

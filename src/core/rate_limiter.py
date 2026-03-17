@@ -23,7 +23,7 @@ class RateLimitStatus:
     limit_reached: bool
 
     @classmethod
-    def from_counts(cls, comments_today: int, daily_limit: int) -> "RateLimitStatus":
+    def from_counts(cls, comments_today: int, daily_limit: int) -> RateLimitStatus:
         remaining = max(0, daily_limit - comments_today)
         return cls(
             comments_today=comments_today,

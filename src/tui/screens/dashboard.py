@@ -1,7 +1,7 @@
 """Main dashboard screen with stats panel, live feed, and controls."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -24,7 +24,7 @@ from src.tui.events import (
     StatsUpdated,
 )
 from src.tui.widgets.comment_review import CommentReview, ReviewDecision
-from src.tui.widgets.header_bar import BotMode, HeaderBar
+from src.tui.widgets.header_bar import HeaderBar
 from src.tui.widgets.live_feed import LiveFeed
 from src.tui.widgets.stats_panel import StatsPanel
 from src.tui.widgets.strategy_panel import StrategyPanel
@@ -195,7 +195,7 @@ class DashboardScreen(Screen):
 
     def on_bot_started(self, event: BotStarted) -> None:
         self._bot_running = True
-        self._bot_started_at = datetime.now(timezone.utc)
+        self._bot_started_at = datetime.now(UTC)
         self.query_one(StatsPanel).reset()
         self.query_one(LiveFeed).add_status("Bot started")
         self._update_status("STATUS: Running")
@@ -246,7 +246,7 @@ class DashboardScreen(Screen):
         )
         elapsed = ""
         if self._bot_started_at:
-            delta = datetime.now(timezone.utc) - self._bot_started_at
+            delta = datetime.now(UTC) - self._bot_started_at
             mins, secs = divmod(int(delta.total_seconds()), 60)
             elapsed = f" | {mins}m{secs:02d}s"
         mode = self.query_one(HeaderBar).mode.value.upper()

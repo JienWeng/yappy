@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 import random
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from src.executor.models import PostResult
 
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext
+
     from src.ai.models import GeneratedComment
     from src.executor.human_typer import HumanTyper
     from src.scraper.models import LinkedInPost
@@ -52,7 +53,7 @@ WAIT_TIMEOUT_MS = 20_000
 
 
 class CommentPoster:
-    def __init__(self, context: "BrowserContext", human_typer: "HumanTyper") -> None:
+    def __init__(self, context: BrowserContext, human_typer: HumanTyper) -> None:
         self._context = context
         self._typer = human_typer
 
@@ -178,7 +179,7 @@ class CommentPoster:
         logger.debug("---------------------------------")
 
     async def post_comment(
-        self, post: "LinkedInPost", comment: "GeneratedComment",
+        self, post: LinkedInPost, comment: GeneratedComment,
         *, auto_like: bool = True,
     ) -> PostResult:
         page = await self._context.new_page()
@@ -209,7 +210,7 @@ class CommentPoster:
                 if comment_btn and await comment_btn.is_visible():
                     logger.debug("Found visible comment button with selector: %s", sel)
                     break
-            
+
             if comment_btn:
                 await comment_btn.click()
                 await page.wait_for_timeout(1500)
@@ -258,7 +259,7 @@ class CommentPoster:
                 success=True,
                 post_url=post.post_url,
                 comment_text=comment.text,
-                posted_at=datetime.now(timezone.utc),
+                posted_at=datetime.now(UTC),
                 error=None,
                 liked=liked,
             )
@@ -269,7 +270,7 @@ class CommentPoster:
                 success=False,
                 post_url=post.post_url,
                 comment_text=comment.text,
-                posted_at=datetime.now(timezone.utc),
+                posted_at=datetime.now(UTC),
                 error=str(exc),
                 liked=liked,
             )

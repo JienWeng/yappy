@@ -83,4 +83,6 @@ AI_PUNCTUATION: tuple[str, ...] = (
     " - - ",    # double hyphen spaced
 )
 
-ALL_BANNED_PHRASES: tuple[str, ...] = AI_CLICHE_PHRASES + BOT_INDICATOR_PHRASES + AI_PUNCTUATION
+ALL_BANNED_PHRASES: tuple[str, ...] = (
+    AI_CLICHE_PHRASES + BOT_INDICATOR_PHRASES + AI_PUNCTUATION
+)

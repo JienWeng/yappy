@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from src.core.callbacks import NullCallbacks
 from src.tui.events import (
+    BotStatus,
     CommentAwaitingApproval,
     CommentFailed,
     CommentGenerated,
@@ -13,7 +14,6 @@ from src.tui.events import (
     PostFound,
     PostSkipped,
     StatsUpdated,
-    BotStatus,
 )
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class BotWorkerCallbacks(NullCallbacks):
     DashboardScreen never see them.
     """
 
-    def __init__(self, app: "App") -> None:
+    def __init__(self, app: App) -> None:
         self._app = app
         self._screen = app.screen
         self._pause_event = threading.Event()
