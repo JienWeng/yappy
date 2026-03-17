@@ -147,8 +147,9 @@ class TestPauseResumeStatusText:
     def test_paused_status_contains_p_to_resume(self) -> None:
         """The on_bot_paused handler must tell users to press p, not s."""
         # Import here to avoid circular import issues at module level
-        from src.tui.screens.dashboard import DashboardScreen
         import inspect
+
+        from src.tui.screens.dashboard import DashboardScreen
 
         source = inspect.getsource(DashboardScreen.on_bot_paused)
         assert "p to resume" in source, (
@@ -172,6 +173,7 @@ class TestMessageRoutingToScreen:
     def test_app_post_message_does_not_reach_screen(self) -> None:
         """Textual messages bubble UP, so app.post_message never reaches child screens."""
         import inspect
+
         from src.tui.app import YappyApp
 
         source = inspect.getsource(YappyApp._run_bot)
@@ -185,6 +187,7 @@ class TestMessageRoutingToScreen:
     def test_bot_worker_posts_on_screen(self) -> None:
         """BotWorkerCallbacks must post on screen, not app."""
         import inspect
+
         from src.tui.workers.bot_worker import BotWorkerCallbacks
 
         source = inspect.getsource(BotWorkerCallbacks)

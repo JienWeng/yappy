@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 from textual.app import App, ComposeResult
 
-from src.tui.widgets.header_bar import HeaderBar, BotMode
+from src.tui.widgets.header_bar import BotMode, HeaderBar
 
 
 class HeaderApp(App):

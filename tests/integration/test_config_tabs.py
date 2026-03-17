@@ -1,14 +1,15 @@
-import yaml
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 import pytest
+import yaml
+from textual.widgets import Checkbox, Input
+
 from src.tui.app import YappyApp
 from src.tui.screens.config_editor import ConfigEditorScreen
-from textual.widgets import Checkbox, Input, Static
+
 
 @pytest.mark.asyncio
 async def test_config_editor_saves_headless_toggle(tmp_path, monkeypatch):
-    from unittest.mock import patch
     import os
     import textwrap
     config_file = tmp_path / "config.yaml"
@@ -49,12 +50,11 @@ async def test_config_editor_saves_headless_toggle(tmp_path, monkeypatch):
                 assert saved_config["browser"]["headless"] is True
 @pytest.mark.asyncio
 async def test_config_editor_saves_api_key_to_env(tmp_path, monkeypatch):
-    from unittest.mock import patch
     import os
     config_file = tmp_path / "config.yaml"
     config_file.write_text("browser:\n  headless: true\n")
     env_file = tmp_path / ".env"
-    
+
     monkeypatch.setattr("src.core.paths.config_file", lambda: config_file)
     monkeypatch.setattr("src.core.paths.env_file", lambda: env_file)
     with patch.dict(os.environ, {"GEMINI_API_KEY": "old-key"}):

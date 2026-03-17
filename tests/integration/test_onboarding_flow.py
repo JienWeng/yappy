@@ -1,16 +1,15 @@
 import os
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 import pytest
-from src.tui.app import YappyApp
-from src.tui.screens.onboarding import OnboardingScreen
-from src.tui.screens.dashboard import DashboardScreen
 from textual.widgets import Input
+
+from src.tui.app import YappyApp
+from src.tui.screens.dashboard import DashboardScreen
+
 
 @pytest.mark.asyncio
 async def test_onboarding_flow_saves_api_key(tmp_path, monkeypatch):
-    from unittest.mock import patch
-    import os
     # Mock paths to use tmp_path
     monkeypatch.setattr("src.core.paths.env_file", lambda: tmp_path / ".env")
     monkeypatch.setattr("src.core.paths.config_file", lambda: tmp_path / "config.yaml")
@@ -57,10 +56,10 @@ async def test_onboarding_flow_saves_api_key(tmp_path, monkeypatch):
 async def test_app_skips_onboarding_if_key_exists(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text("GEMINI_API_KEY=existing-key")
-    
+
     monkeypatch.setattr("src.core.paths.env_file", lambda: env_file)
     monkeypatch.setattr("src.core.paths.config_file", lambda: tmp_path / "config.yaml")
-    
+
     app = YappyApp()
     async with app.run_test() as pilot:
         assert isinstance(app.screen, DashboardScreen)
