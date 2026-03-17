@@ -34,8 +34,8 @@ class TestTUISmoke:
 
     @pytest.mark.asyncio
     async def test_navigation_consistency(self):
-        from src.tui.screens.config_editor import ConfigEditorScreen
         from src.tui.screens.activity_log import ActivityLogScreen
+        from src.tui.screens.config_editor import ConfigEditorScreen
 
         app = YappyApp(skip_onboarding=True)
         async with app.run_test() as pilot:
@@ -51,7 +51,7 @@ class TestTUISmoke:
             await pilot.press("escape")
             assert isinstance(app.screen, DashboardScreen)
 
-            # Test 'q' on sub-screen (should also return to dashboard if configured that way, 
+            # Test 'q' on sub-screen (should also return to dashboard if configured that way,
             # but we unified 'q' to 'Back' on sub-screens in Task 3)
             await pilot.press("c")
             await pilot.press("q")

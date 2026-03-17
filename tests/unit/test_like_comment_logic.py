@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
 
 import pytest
 
-from src.core.config import AppConfig, AIConfig, BrowserConfig, LimitsConfig, TargetConfig
+from src.core.config import (
+    AIConfig,
+    AppConfig,
+    BrowserConfig,
+    LimitsConfig,
+    TargetConfig,
+)
 from src.executor.models import PostResult
 from src.storage.activity_log import ActivityLog
-from src.storage.models import ActivityRecord
-
 
 # ---------------------------------------------------------------------------
 # ActivityLog: count_today should only count comments, not likes
@@ -37,7 +40,7 @@ class TestActivityLogMigration:
         conn.execute(
             "INSERT INTO activity_log (post_url, comment_text, status, created_at) "
             "VALUES ('https://linkedin.com/post/old', 'old comment', 'success', ?)",
-            (datetime.now(timezone.utc).isoformat(),),
+            (datetime.now(UTC).isoformat(),),
         )
         conn.commit()
         conn.close()
@@ -144,7 +147,7 @@ class TestOrchestratorLikeConfig:
             success=True,
             post_url="https://linkedin.com/post/1",
             comment_text="Nice!",
-            posted_at=datetime.now(timezone.utc),
+            posted_at=datetime.now(UTC),
             error=None,
             liked=True,
         )
@@ -156,7 +159,7 @@ class TestOrchestratorLikeConfig:
             success=True,
             post_url="https://linkedin.com/post/1",
             comment_text="Nice!",
-            posted_at=datetime.now(timezone.utc),
+            posted_at=datetime.now(UTC),
             error=None,
         )
         assert result.liked is False

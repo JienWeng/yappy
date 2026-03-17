@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
-
-import pytest
 
 from src.ai.comment_generator import CommentGenerator
 from src.ai.models import GeneratedComment
@@ -16,7 +14,7 @@ def make_post(text: str = "We just closed our Series A round.") -> LinkedInPost:
         author_name="Jane Doe",
         author_profile_url="https://linkedin.com/in/janedoe",
         post_text=text,
-        scraped_at=datetime.now(timezone.utc),
+        scraped_at=datetime.now(UTC),
         source_target="AI startup fundraising",
     )
 
