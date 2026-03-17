@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING
 from textual import work
 from textual.app import App
 
+from src.tui.events import BotPaused, BotStatus
 from src.tui.screens.activity_log import ActivityLogScreen
 from src.tui.screens.config_editor import ConfigEditorScreen
 from src.tui.screens.dashboard import DashboardScreen
 from src.tui.screens.onboarding import OnboardingScreen
 from src.tui.widgets.comment_review import ReviewDecision
-from src.tui.events import BotPaused, BotStatus
 from src.tui.workers.bot_worker import BotWorkerCallbacks
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ class YappyApp(App):
         background: #1e2030;
         color: #cad3f5;
     }
-    
+
     /* Catppuccin Macchiato Palette */
     $sapphire: #8aadf4;
     $mauve: #c6a0f6;
@@ -62,8 +62,9 @@ class YappyApp(App):
 
     def _onboarding_complete(self) -> bool:
         """Check if onboarding has been completed by verifying the GEMINI_API_KEY."""
-        from src.core import paths
         import os
+
+        from src.core import paths
 
         # Check environment first (may already be set by user)
         if os.environ.get("GEMINI_API_KEY"):
@@ -125,7 +126,7 @@ class YappyApp(App):
                 decision.value, comment_text
             )
 
-    def set_bot_mode(self, mode: "BotMode") -> None:
+    def set_bot_mode(self, mode: BotMode) -> None:
         from src.tui.widgets.header_bar import BotMode
 
         if self._worker_callbacks:

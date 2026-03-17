@@ -14,11 +14,11 @@ from textual.widgets import (
     Footer,
     Input,
     Label,
+    Select,
     Static,
     TabbedContent,
     TabPane,
     TextArea,
-    Select,
 )
 
 
@@ -352,9 +352,10 @@ class ConfigEditorScreen(Screen):
 
     async def _refresh_linkedin_login(self) -> None:
         """Open browser for LinkedIn re-authentication."""
+        import asyncio
+
         from src.core.config import load_config
         from src.scraper.browser_factory import create_persistent_context
-        import asyncio
 
         config = load_config()
         self.query_one("#config-status", Static).update("Opening browser for login...")
@@ -373,7 +374,7 @@ class ConfigEditorScreen(Screen):
                     break
                 await asyncio.sleep(1)
             await asyncio.sleep(2)  # extra buffer
-        
+
         self.query_one("#config-status", Static).update("LinkedIn session refreshed!")
 
     def _validate_and_collect(self) -> list[str]:

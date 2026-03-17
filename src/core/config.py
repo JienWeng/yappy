@@ -6,7 +6,6 @@ from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
-from pydantic_settings import BaseSettings
 
 from src.core import paths
 
@@ -44,7 +43,7 @@ class LimitsConfig(BaseModel, frozen=True):
     auto_like: bool = True  # like posts before commenting
 
     @model_validator(mode="after")
-    def _check_min_max(self) -> "LimitsConfig":
+    def _check_min_max(self) -> LimitsConfig:
         if self.min_delay_seconds >= self.max_delay_seconds:
             raise ValueError(
                 f"min_delay_seconds ({self.min_delay_seconds}) must be less than "
@@ -67,7 +66,7 @@ class AppConfig(BaseModel, frozen=True):
     db_path: str = ""
 
     @model_validator(mode="after")
-    def _check_targets(self) -> "AppConfig":
+    def _check_targets(self) -> AppConfig:
         if not self.targets:
             raise ValueError("At least one target must be configured")
         return self

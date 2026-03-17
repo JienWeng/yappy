@@ -27,7 +27,7 @@ class HumanTyper:
         self._min_wpm = min_wpm
         self._max_wpm = max_wpm
 
-    async def type_text(self, page: "Page", selector: str, text: str) -> None:
+    async def type_text(self, page: Page, selector: str, text: str) -> None:
         if not text:
             return
 
@@ -43,7 +43,7 @@ class HumanTyper:
         await page.click(selector)
         await page.wait_for_timeout(300)
 
-        for i, char in enumerate(text):
+        for _, char in enumerate(text):
             # Per-character jitter: ±30%
             delay = base_ms * random.uniform(0.70, 1.30)
             await page.keyboard.type(char, delay=delay)
@@ -64,7 +64,7 @@ class HumanTyper:
         else:
             logger.debug("Typing verified (%d chars)", len(text))
 
-    async def _read_content(self, page: "Page", selector: str) -> str | None:
+    async def _read_content(self, page: Page, selector: str) -> str | None:
         try:
             el = await page.query_selector(selector)
             if not el:

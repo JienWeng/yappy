@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.core.config import TargetConfig
+    pass
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from src.ai.banned_phrases import ALL_BANNED_PHRASES
@@ -72,11 +72,11 @@ _NO_REPEAT_RULE = "- Do NOT repeat any idea, phrasing, or question already in th
 
 
 class CommentGenerator:
-    def __init__(self, client: "GeminiClient", config: "AIConfig") -> None:
+    def __init__(self, client: GeminiClient, config: AIConfig) -> None:
         self._client = client
         self._config = config
 
-    def generate(self, post: "LinkedInPost") -> GenerateResult:
+    def generate(self, post: LinkedInPost) -> GenerateResult:
         try:
             prompt = self._build_prompt(post)
             raw_text = self._client.generate(prompt)
@@ -84,7 +84,7 @@ class CommentGenerator:
             comment = GeneratedComment(
                 text=validated_text,
                 post_url=post.post_url,
-                generated_at=datetime.now(timezone.utc),
+                generated_at=datetime.now(UTC),
                 model_used=self._config.model_name,
             )
             return GenerateResult(comment=comment, error=None)
@@ -92,7 +92,7 @@ class CommentGenerator:
             logger.error("Comment generation failed for %s: %s", post.post_url, exc)
             return GenerateResult(comment=None, error=str(exc))
 
-    def _build_prompt(self, post: "LinkedInPost") -> str:
+    def _build_prompt(self, post: LinkedInPost) -> str:
         banned_list = "\n".join(f"- {phrase}" for phrase in ALL_BANNED_PHRASES)
         author = post.author_name or "the author"
 

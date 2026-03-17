@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from playwright.async_api import BrowserContext, Page
@@ -11,6 +11,7 @@ from playwright.async_api import BrowserContext, Page
 from src.scraper.models import LinkedInPost, ScrapeResult
 
 if TYPE_CHECKING:
+    from src.core.callbacks import OrchestratorCallbacks
     from src.core.config import TargetConfig
     from src.storage.activity_log import ActivityLog
 
@@ -110,10 +111,10 @@ class LinkedInScraper:
     def __init__(
         self,
         context: BrowserContext,
-        activity_log: "ActivityLog",
+        activity_log: ActivityLog,
         min_reactions: int = 5,
         min_comments: int = 2,
-        callbacks: "OrchestratorCallbacks | None" = None,
+        callbacks: OrchestratorCallbacks | None = None,
     ) -> None:
         self._context = context
         self._log = activity_log
@@ -122,7 +123,7 @@ class LinkedInScraper:
         self._callbacks = callbacks
         self._last_skipped_count = 0
 
-    async def scrape_target(self, target: "TargetConfig") -> ScrapeResult:
+    async def scrape_target(self, target: TargetConfig) -> ScrapeResult:
         started = time.monotonic()
         page = await self._context.new_page()
         try:
@@ -146,7 +147,7 @@ class LinkedInScraper:
         finally:
             await page.close()
 
-    async def _scrape(self, page: Page, target: "TargetConfig") -> list[LinkedInPost]:
+    async def _scrape(self, page: Page, target: TargetConfig) -> list[LinkedInPost]:
         if target.type == "feed":
             url = LINKEDIN_FEED_URL
             msg = "Navigating to home feed..."
@@ -163,7 +164,7 @@ class LinkedInScraper:
                 hours=target.recency_hours,
             )
             msg = f"Searching for keyword: {target.value}..."
-        
+
         if self._callbacks:
             self._callbacks.on_status(msg)
 
@@ -240,7 +241,7 @@ class LinkedInScraper:
     async def _log_dom_diagnostics(self, page: Page) -> None:
         """Log counts for candidate selectors to help identify the right ones."""
         # Save screenshot so we can see what the browser is actually rendering
-        import os, time as _time
+        import time as _time
         screenshot_path = f"/tmp/linkedin_debug_{int(_time.time())}.png"
         try:
             await page.screenshot(path=screenshot_path, full_page=False)
@@ -326,7 +327,7 @@ class LinkedInScraper:
             for i, s in enumerate(new_feed_sample):
                 logger.info("New-feed post[%d]: author=%r ctrl=%r text=%r", i, s.get('authorName'), s.get('controlMenuAriaLabel'), s.get('postText'))
                 logger.info("  times=%s  actionBtns=%s", s.get('timeEls'), s.get('actionBtns'))
-                logger.info("  links=%s", [l['href'] for l in s.get('allLinks', [])])
+                logger.info("  links=%s", [link['href'] for link in s.get('allLinks', [])])
                 logger.info("  rootKey=%r  reactText=%r", s.get('rootKey'), s.get('reactText'))
         except Exception as exc:
             logger.debug("New-feed JS probe failed: %s", exc)
@@ -358,7 +359,7 @@ class LinkedInScraper:
         logger.info("-----------------------")
 
     async def _extract_posts_from_page(
-        self, page: Page, target: "TargetConfig"
+        self, page: Page, target: TargetConfig
     ) -> list[LinkedInPost]:
         posts: list[LinkedInPost] = []
         skipped_count = 0
@@ -431,7 +432,7 @@ class LinkedInScraper:
                 logger.warning("Failed to parse post container: %s", exc)
                 continue
 
-        # Return both posts and skipped_count by piggybacking on return if needed, 
+        # Return both posts and skipped_count by piggybacking on return if needed,
         # but the caller expects list[LinkedInPost].
         # I will store it in the instance state or update scrape_target to return ScrapeResult.
         self._last_skipped_count = skipped_count
@@ -520,7 +521,7 @@ class LinkedInScraper:
             author_name=author_name,
             author_profile_url=author_url,
             post_text=post_text[:2000],
-            scraped_at=datetime.now(timezone.utc),
+            scraped_at=datetime.now(UTC),
             source_target=source_target,
             reaction_count=reaction_count,
             comment_count=comment_count,

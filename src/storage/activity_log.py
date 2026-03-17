@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from src.storage.models import ActivityRecord, DailyStats
@@ -65,7 +65,7 @@ class ActivityLog:
             raise ValueError(
                 f"Invalid status: {status!r}. Must be 'success' or 'failed'."
             )
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._connect() as conn:
             conn.execute(
                 "INSERT INTO activity_log (post_url, comment_text, status, failure_reason, action_type, created_at) "
@@ -86,7 +86,7 @@ class ActivityLog:
 
     def count_today(self) -> int:
         """Count successful comments posted today (UTC). Excludes likes."""
-        today = datetime.now(timezone.utc).date().isoformat()
+        today = datetime.now(UTC).date().isoformat()
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT COUNT(*) FROM activity_log "
@@ -131,7 +131,7 @@ class ActivityLog:
     def get_daily_stats(self, date: str | None = None) -> DailyStats:
         """Return stats for a given UTC date (default: today)."""
         if date is None:
-            date = datetime.now(timezone.utc).date().isoformat()
+            date = datetime.now(UTC).date().isoformat()
 
         with self._connect() as conn:
             rows = conn.execute(

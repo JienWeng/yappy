@@ -1,8 +1,6 @@
 """Onboarding wizard screen for first-time setup."""
 from __future__ import annotations
 
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
@@ -236,8 +234,9 @@ class OnboardingScreen(Screen):
         validation.update("Testing key...")
 
         try:
-            from src.ai.gemini_client import GeminiClient
             import os
+
+            from src.ai.gemini_client import GeminiClient
 
             # Temporary env override for testing
             os.environ["GEMINI_API_KEY"] = key

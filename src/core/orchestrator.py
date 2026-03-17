@@ -3,19 +3,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from src.core.callbacks import NullCallbacks
 
 if TYPE_CHECKING:
+    from src.ai.comment_generator import CommentGenerator
     from src.core.callbacks import OrchestratorCallbacks
     from src.core.config import AppConfig
     from src.core.rate_limiter import RateLimiter
-    from src.scraper.linkedin_scraper import LinkedInScraper
-    from src.ai.comment_generator import CommentGenerator
     from src.executor.comment_poster import CommentPoster
+    from src.scraper.linkedin_scraper import LinkedInScraper
     from src.storage.activity_log import ActivityLog
 
 logger = logging.getLogger(__name__)
@@ -35,13 +35,13 @@ class PipelineResult:
 class Orchestrator:
     def __init__(
         self,
-        config: "AppConfig",
-        rate_limiter: "RateLimiter",
-        scraper: "LinkedInScraper",
-        comment_generator: "CommentGenerator",
-        comment_poster: "CommentPoster",
-        activity_log: "ActivityLog",
-        callbacks: "OrchestratorCallbacks | None" = None,
+        config: AppConfig,
+        rate_limiter: RateLimiter,
+        scraper: LinkedInScraper,
+        comment_generator: CommentGenerator,
+        comment_poster: CommentPoster,
+        activity_log: ActivityLog,
+        callbacks: OrchestratorCallbacks | None = None,
     ) -> None:
         self._config = config
         self._rate_limiter = rate_limiter
@@ -50,12 +50,12 @@ class Orchestrator:
         self._poster = comment_poster
         self._log = activity_log
         self._callbacks: OrchestratorCallbacks = callbacks or NullCallbacks()
-        
+
         # Wire up callbacks to scraper
         self._scraper._callbacks = self._callbacks
 
     async def run(self) -> PipelineResult:
-        started_at = datetime.now(timezone.utc)
+        started_at = datetime.now(UTC)
         posts_scraped = 0
         comments_attempted = 0
         comments_succeeded = 0
@@ -125,7 +125,7 @@ class Orchestrator:
                     errors.append(str(exc))
                     return PipelineResult(
                         started_at=started_at,
-                        finished_at=datetime.now(timezone.utc),
+                        finished_at=datetime.now(UTC),
                         posts_scraped=posts_scraped,
                         comments_attempted=comments_attempted,
                         comments_succeeded=comments_succeeded,
@@ -181,7 +181,7 @@ class Orchestrator:
                         post, final_comment,
                         auto_like=self._config.limits.auto_like,
                     )
-                    
+
                     # Record like if successful
                     if post_result.liked:
                         self._log.record_activity(
@@ -238,7 +238,7 @@ class Orchestrator:
 
         return PipelineResult(
             started_at=started_at,
-            finished_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(UTC),
             posts_scraped=posts_scraped,
             comments_attempted=comments_attempted,
             comments_succeeded=comments_succeeded,

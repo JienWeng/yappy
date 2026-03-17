@@ -52,6 +52,7 @@ include = ["src*"]
 # Target Python version
 target-version = "py311"
 
+[tool.ruff.lint]
 # Rule selections
 select = [
     "E",   # pycodestyle errors
@@ -63,7 +64,10 @@ select = [
     "UP",  # pyupgrade
     "T20", # flake8-print
 ]
-ignore = []
+# Ignored rules:
+# E501: Line too long - long lines are JavaScript snippets or AI prompts
+# T201: print statements - intentional CLI output
+ignore = ["E501", "T201"]
 
 # Exclude directories
 exclude = [

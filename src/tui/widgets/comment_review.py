@@ -1,7 +1,7 @@
 """Comment review widget for manual approval mode."""
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from textual.app import ComposeResult
 from textual.message import Message
@@ -9,7 +9,7 @@ from textual.widget import Widget
 from textual.widgets import Button, Label, Static, TextArea
 
 
-class ReviewDecision(str, Enum):
+class ReviewDecision(StrEnum):
     APPROVE = "approve"
     SKIP = "skip"
     EDIT = "edit"
